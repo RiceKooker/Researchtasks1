@@ -48,6 +48,12 @@ class Block:
 
         return Block(temp_CoM, new_Dims)
 
+    def three_DEC_create(self):
+        x_lim = [self.Vertices[0][0], self.Vertices[3][0]]
+        y_lim = [self.Vertices[0][1], self.Vertices[4][1]]
+        z_lim = [self.Vertices[0][2], self.Vertices[1][2]]
+        return f"block create brick {x_lim[0]:.10f} {x_lim[1]:.10f} {y_lim[0]:.10f} {y_lim[1]:.10f} {z_lim[0]:.10f} {z_lim[1]:.10f} \n"
+
 
 def find_block_CoM(vertices):
     n = 0
@@ -146,6 +152,12 @@ class BlockRow(BlockRow1):
             self.block_list[i].move(dis_vec)
         self.CoM = find_row_CoM(self.block_list)
 
+    def three_DEC_create(self):
+        total_commands = ''
+        for block in self.block_list:
+            total_commands += block.three_DEC_create()
+        return total_commands
+
 
 def create_type2_row(num_x, block_dims):
     Br = BlockRow(start_point=origin, num_blocks=num_x-1, Block_Dims=block_dims)
@@ -219,7 +231,11 @@ class BlockWall:
     def __len__(self):
         return len(self.row_list)
 
-
+    def three_DEC_create(self):
+        total_command = ''
+        for row in self.row_list:
+            total_command += row.three_DEC_create()
+        return total_command
 
 
 if __name__ == '__main__':
@@ -239,4 +255,6 @@ if __name__ == '__main__':
     sample_wall_dims = np.multiply(num_blocks, np.array(brick_dims_UK))
     W1 = BlockWall(sample_wall_dims)
     print(f'Number of rows: {len(W1)}')
-    W1.draw_wall()
+    # W1.draw_wall()
+    with open('sample.dec', 'w+') as f:
+        f.write(W1.three_DEC_create())
