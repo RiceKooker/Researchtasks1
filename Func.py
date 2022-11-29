@@ -71,6 +71,9 @@ def draw_blocks(block_list):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     ax.set_box_aspect([ub - lb for lb, ub in (getattr(ax, f'get_{a}lim')() for a in 'xyz')])
+    # ax.get_xaxis().set_ticks([])
+    # ax.get_yaxis().set_ticks([])
+    # ax.get_zaxis().set_ticks([])
     plt.show()
 
 
