@@ -84,3 +84,6 @@ def find_axis_and_direction(side):
     return axis, direction
 
 
+def dependency_test():
+    print('Test done!')
+

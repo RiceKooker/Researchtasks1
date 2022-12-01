@@ -238,6 +238,17 @@ class BlockWall:
         return total_command
 
 
+class ThreeDECScript:
+    def __init__(self, model_creation, boundary_conditions, loadings, material_properties):
+        self.model_creation = model_creation
+        self.boundary_conditions = boundary_conditions
+        self.loadings = loadings
+        self.material_properties = material_properties
+
+    def final_commands(self):
+        return self.model_creation + '\n' + self.material_properties + '\n' + self.boundary_conditions + '\n' + self.loadings
+
+
 if __name__ == '__main__':
     # sample_CoM = [2.4, 4, 5.9]
     # sample_Dims = [2.9, 1.5, 0.9]

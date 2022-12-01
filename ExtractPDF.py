@@ -1,7 +1,7 @@
 import pandas as pd
 
 column_names = ['Width', 'Height', 'Thickness_mm']
-file_dir = 'Test_specification.pkl'
+file_dir = 'data/Test_specification.pkl'
 
 
 def create_empty_dataframe(*args):
