@@ -37,5 +37,37 @@ def create_boundary_bricks(vertices):
            [z_bot, z_top]
 
 
+def vector_rotation(alpha, beta, gamma):
+    angles = [alpha, beta, gamma]
+    sine = np.zeros((3,))
+    cosine = np.zeros((3,))
+    for i, angle in enumerate(angles):
+        sine[i] = np.sin(angle)
+        cosine[i] = np.cos(angle)
+
+    R_z = np.array([[cosine[2], -sine[2], 0],
+                    [sine[2], cosine[2], 0],
+                    [0, 0, 1]])
+    R_y = np.array([[cosine[1], 0, sine[1]],
+                    [0, 1, 0],
+                    [-sine[1], 0, cosine[1]]])
+    R_x = np.array([[1, 0, 0],
+                   [0, cosine[0], -sine[0]],
+                   [0, sine[0], cosine[0]]])
+    return np.matmul(R_z, np.matmul(R_y, R_x))
+
+
+def translate_and_rotate(angles, translation):
+    return np.matmul(vector_rotation(angles[0], angles[1], angles[2]), translation) + translation
+
+
+if __name__ == '__main__':
+    a = np.array([[1, 2, 4],
+                 [5, 2, 1],
+                 [1, 1, 1]])
+    b = np.array([5, 6, 9])
+    print(np.matmul(a, b))
+
+
 
 
