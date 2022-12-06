@@ -1,15 +1,5 @@
-from Classes import BlockWall, ThreeDECScript
-import Const
-import numpy as np
-
-print(Const.brick_dim_num)
-def create_geometry(dimensions=Const.brick_dim_num, block_num=True):
-    if block_num:
-        wall_dim = np.multiply(np.array(dimensions), np.array(Const.brick_dims_UK))
-    else:
-        wall_dim = dimensions
-    wall = BlockWall(wall_dim)
-    return wall.three_DEC_create()
+from Classes import ThreeDECScript
+from utils import create_geometry
 
 
 brick_commands = create_geometry()
@@ -72,4 +62,4 @@ model solve time 0.5
 model save 'wall'
 """
 
-script = ThreeDECScript(model_creation, boundary_conditions, loadings, material_properties).final_commands()
+script = ThreeDECScript(model_creation,  material_properties, boundary_conditions, loadings).final_commands()

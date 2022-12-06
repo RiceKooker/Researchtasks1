@@ -1,2 +1,2 @@
-from Func import dependency_test
-dependency_test()
+import numpy as np
+print(np.zeros((3,)))

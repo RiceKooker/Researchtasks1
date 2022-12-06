@@ -4,6 +4,6 @@ side_dict = {'top': [2, 1], 'bot': [2, -1], 'left': [0, -1], 'right': [0, 1], 'f
 origin = [0, 0, 0]
 # brick_dims_UK = [215, 102.5, 65] / 1000000
 brick_dims_UK = [i/1000 for i in [215, 102.5, 65]]
-brick_dim_num = [8, 2, 5]
+
 
 

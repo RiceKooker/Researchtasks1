@@ -1,8 +1,8 @@
 import numpy as np
 import Func
-import matplotlib.pyplot as plt
 from colorama import Fore, Style
 from Const import origin, brick_dims_UK
+from model_specs import brick_dim_num
 
 
 class Block:
@@ -192,11 +192,12 @@ class BlockWall:
         """
         num_bricks = []  # Number of blocks in x,y and z directions
         for w_dim, b_dim in zip(wall_dims, block_dims):
-            num_bricks.append(round(w_dim/b_dim))
+            num_bricks.append(int(round(w_dim/b_dim)))
         num_x, num_y, num_z = num_bricks[0], num_bricks[1], num_bricks[2]
 
         row_list = []
         for j in range(num_y):
+            z_built = 0
             # Reset the first two rows in a layer
             first_row_type0 = BlockRow(start_point=origin, num_blocks=num_x, Block_Dims=block_dims)
             first_row_type1 = create_type2_row(num_x, block_dims)
@@ -226,7 +227,7 @@ class BlockWall:
         for row in self.row_list:
             block_list += row.block_list
         print(f'Number of blocks : {len(block_list)}')
-        Func.draw_blocks(block_list)
+        Func.draw_blocks(block_list, self.find_vertices())
 
     def __len__(self):
         return len(self.row_list)
@@ -237,9 +238,26 @@ class BlockWall:
             total_command += row.three_DEC_create()
         return total_command
 
+    def find_vertices(self):
+        """
+        This function returns the vertices of the wall following the same ordering condition as blocks.
+        :return:
+        """
+        max_dims = np.zeros((3,))
+        min_dims = 100000*np.ones((3,))
+        for row in self.row_list:
+            for block in row.block_list:
+                for vertex in block.Vertices:
+                    for axis, axis_value in enumerate(vertex):
+                        if axis_value < min_dims[axis]:
+                            min_dims[axis] = axis_value
+                        if axis_value > max_dims[axis]:
+                            max_dims[axis] = axis_value
+        return Func.find_vertices_from_max(min_dims, max_dims)
+
 
 class ThreeDECScript:
-    def __init__(self, model_creation, boundary_conditions, loadings, material_properties):
+    def __init__(self, model_creation, material_properties, boundary_conditions, loadings):
         self.model_creation = model_creation
         self.boundary_conditions = boundary_conditions
         self.loadings = loadings
@@ -262,10 +280,10 @@ if __name__ == '__main__':
     # Br1.move([Dims_half_x[0], 0, 0])
     # Func.draw_blocks(Br1.block_list+Br2.block_list)
 
-    num_blocks = np.array([8, 2, 5])
+    num_blocks = brick_dim_num
     sample_wall_dims = np.multiply(num_blocks, np.array(brick_dims_UK))
     W1 = BlockWall(sample_wall_dims)
     print(f'Number of rows: {len(W1)}')
-    # W1.draw_wall()
-    with open('sample.dec', 'w+') as f:
-        f.write(W1.three_DEC_create())
+    W1.draw_wall()
+    # with open('sample.dec', 'w+') as f:
+    #     f.write(W1.three_DEC_create())

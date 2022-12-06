@@ -32,6 +32,25 @@ def find_vertices(CoM, Dims):
     return vertices
 
 
+def find_vertices_from_max(min_dims, max_dims):
+    x_min = min_dims[0]
+    x_max = max_dims[0]
+    y_min = min_dims[1]
+    y_max = max_dims[1]
+    z_min = min_dims[2]
+    z_max = max_dims[2]
+    vertices = np.zeros([8, 3])
+    vertices[0] = [x_min, y_min, z_min]
+    vertices[1] = [x_min, y_min, z_max]
+    vertices[2] = [x_max, y_min, z_max]
+    vertices[3] = [x_max, y_min, z_min]
+    vertices[4] = [x_min, y_max, z_min]
+    vertices[5] = [x_min, y_max, z_max]
+    vertices[6] = [x_max, y_max, z_max]
+    vertices[7] = [x_max, y_max, z_min]
+    return vertices
+
+
 def transform_vertices(vertices):
     """
     This function transforms the order of the vertices so that they can be visualised easily.
@@ -49,10 +68,11 @@ def transform_vertices(vertices):
     return new_vertices
 
 
-def draw_blocks(block_list):
+def draw_blocks(block_list, wall_vert):
     fig = plt.figure()
     ax = Axes3D(fig, auto_add_to_figure=False)
     fig.add_axes(ax)
+    ax.scatter3D(wall_vert[:, 0], wall_vert[:, 1], wall_vert[:, 2], marker='^', c='#010812', s=50)
     for block in block_list:
         vertices = transform_vertices(block.Vertices)
         x = vertices[:, 0]
