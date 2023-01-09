@@ -68,11 +68,13 @@ def transform_vertices(vertices):
     return new_vertices
 
 
-def draw_blocks(block_list, wall_vert):
+def draw_blocks(block_list, wall_vert=None):
     fig = plt.figure()
     ax = Axes3D(fig, auto_add_to_figure=False)
     fig.add_axes(ax)
-    ax.scatter3D(wall_vert[:, 0], wall_vert[:, 1], wall_vert[:, 2], marker='^', c='#010812', s=50)
+    if wall_vert is not None:
+        # This is to highlight the vertices of the wall.
+        ax.scatter3D(wall_vert[:, 0], wall_vert[:, 1], wall_vert[:, 2], marker='^', c='#010812', s=50)
     for block in block_list:
         vertices = transform_vertices(block.Vertices)
         x = vertices[:, 0]

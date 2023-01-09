@@ -3,9 +3,10 @@ import Func
 from colorama import Fore, Style
 from Const import origin, brick_dims_UK
 from model_specs import brick_dim_num
+from Const import output_geometry_file_separator as gfs
 
 
-class Block:
+class Block1:
     def __init__(self, CoM, Dims):
         """
         Create a block with a given center of mass and dimensions
@@ -53,6 +54,22 @@ class Block:
         y_lim = [self.Vertices[0][1], self.Vertices[4][1]]
         z_lim = [self.Vertices[0][2], self.Vertices[1][2]]
         return f"block create brick {x_lim[0]:.10f} {x_lim[1]:.10f} {y_lim[0]:.10f} {y_lim[1]:.10f} {z_lim[0]:.10f} {z_lim[1]:.10f} \n"
+
+
+class Block(Block1):
+    def __init__(self, CoM=None, Dims=None, vertices=None):
+        if vertices is None:
+            Block1.__init__(self, CoM, Dims)
+        else:
+            CoM, Dims = verts_to_Dims_CoM(vertices)
+            Block1.__init__(self, CoM, Dims)
+
+
+def verts_to_Dims_CoM(vertices):
+    Dims = [vertices[3][0]-vertices[0][0], vertices[4][1]-vertices[0][1], vertices[1][2]-vertices[0][2]]
+    Dims = np.array(Dims)
+    CoM = np.array(vertices[0]) + 0.5*Dims
+    return CoM, Dims
 
 
 def find_block_CoM(vertices):
@@ -222,12 +239,12 @@ class BlockWall:
                 row_dict[row_type] = row_new  # Update the reference row
         self.row_list = row_list
 
-    def draw_wall(self):
+    def draw(self):
         block_list = []
         for row in self.row_list:
             block_list += row.block_list
         print(f'Number of blocks : {len(block_list)}')
-        Func.draw_blocks(block_list, self.find_vertices())
+        Func.draw_blocks(block_list, wall_vert=self.find_vertices())
 
     def __len__(self):
         return len(self.row_list)
@@ -255,6 +272,15 @@ class BlockWall:
                             max_dims[axis] = axis_value
         return Func.find_vertices_from_max(min_dims, max_dims)
 
+    def all_vertices(self):
+        for row in self.row_list:
+            for i, block in enumerate(row.block_list):
+                print(f'Block {i+1}')
+                print('----------------------------------------------------------------------------')
+                print('----------------------------------------------------------------------------')
+                for vertex in block.Vertices:
+                    print(vertex)
+
 
 class ThreeDECScript:
     def __init__(self, model_creation, material_properties, boundary_conditions, loadings):
@@ -267,23 +293,86 @@ class ThreeDECScript:
         return self.model_creation + '\n' + self.material_properties + '\n' + self.boundary_conditions + '\n' + self.loadings
 
 
-if __name__ == '__main__':
-    # sample_CoM = [2.4, 4, 5.9]
-    # sample_Dims = [2.9, 1.5, 0.9]
-    # sample_Dims2 = [2.9*0.4, 3.3*2, 7.2*0.3]
-    # Dims_half_x = [2.9*0.5, 1.5, 0.9]
-    # Br1 = BlockRow([0,0,0], 15, sample_Dims)
-    # Br1.add_block('left', 1, block_dims=Dims_half_x)
-    # Br1.add_block('right', 1, block_dims=Dims_half_x)
-    # Br2 = BlockRow([0,0,0], 18, sample_Dims)
-    # Br2 = Br2.duplicate('top')
-    # Br1.move([Dims_half_x[0], 0, 0])
-    # Func.draw_blocks(Br1.block_list+Br2.block_list)
+class BlockGroup:
+    def __init__(self, vert_list):
+        self.block_list = []
+        for block_verts in vert_list:
+            self.block_list.append(Block(vertices=block_verts))
 
-    num_blocks = brick_dim_num
-    sample_wall_dims = np.multiply(num_blocks, np.array(brick_dims_UK))
-    W1 = BlockWall(sample_wall_dims)
-    print(f'Number of rows: {len(W1)}')
-    W1.draw_wall()
-    # with open('sample.dec', 'w+') as f:
-    #     f.write(W1.three_DEC_create())
+    def draw(self):
+        Func.draw_blocks(self.block_list)
+
+
+class GeometryReader:
+    """
+    This class reads the geometry text file generated from 3DEC and post-process it for reconstruction.
+    """
+    def __init__(self, file_name):
+        self.txt = {gfs[0]: [], gfs[1]: [], gfs[2]: []}
+        self.gridpoints = {}
+        self.vertices = {}
+        self.faces = {}
+        self.blocks = {}
+        with open(file_name, 'rb') as f:
+            lines = f.readlines()
+            separator_count = 0
+            record = False
+            decode_spec = "utf-8"
+            for i, line in enumerate(lines):
+                line = line.decode(decode_spec)
+                line = line.replace('\n', '')
+                if '*' in line and record:
+                    record = False
+                    separator_count += 1
+                    if separator_count > 2:
+                        break
+                if record:
+                    self.txt[gfs[separator_count]].append(line)
+                if gfs[separator_count] in line:
+                    record = True
+
+    def get_block_vertices(self):
+        """
+        This function returns a list containing all the coordinates of all
+        vertices of blocks described in the geometry txt file.
+        :return: a 4-dimensional list (block, vertex, coordinate, axis)
+        """
+        block_vertices = []
+        gp_read_count = 0
+        # For each block
+        for i, block_txt in enumerate(self.txt[gfs[2]]):
+            vertices = []
+            while len(vertices) < 8:
+                gp_txt = self.txt[gfs[0]][gp_read_count].split()  # Get the split information of one single line of grid point description
+                vertex = [float(j) for j in gp_txt[2:5]]  # Select the coordinates and convert the scientific notation
+                vertices.append(vertex)
+                gp_read_count += 1
+            vertices = transform_vertex_3DEC(vertices)
+            block_vertices.append(vertices)
+
+        return block_vertices
+
+
+def transform_vertex_3DEC(vertices):
+    temp = vertices.copy()
+    temp[1] = vertices[4]
+    temp[2] = vertices[5]
+    temp[3] = vertices[1]
+    temp[4] = vertices[3]
+    temp[5] = vertices[6]
+    temp[6] = vertices[7]
+    temp[7] = vertices[2]
+    return temp
+
+if __name__ == '__main__':
+    # num_blocks = brick_dim_num
+    # sample_wall_dims = np.multiply(num_blocks, np.array(brick_dims_UK))
+    # W1 = BlockWall(sample_wall_dims)
+    # print(f'Number of rows: {len(W1)}')
+    # W1.draw()
+
+    filename = 'geo_info2.txt'
+    a = GeometryReader(filename)
+    sample_bg = BlockGroup(a.get_block_vertices())
+    sample_bg.draw()
+
