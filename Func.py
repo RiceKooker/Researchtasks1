@@ -69,6 +69,12 @@ def transform_vertices(vertices):
 
 
 def draw_blocks(block_list, wall_vert=None):
+    """
+    This function draws all the block objects given in the block_list.
+    :param block_list:
+    :param wall_vert: optional. This is to highlight the corners of the wall.
+    :return:
+    """
     fig = plt.figure()
     ax = Axes3D(fig, auto_add_to_figure=False)
     fig.add_axes(ax)
