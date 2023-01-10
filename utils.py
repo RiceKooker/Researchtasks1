@@ -1,5 +1,44 @@
 import Const
 import numpy as np
+import random
+
+
+def sample_displacements(dims, thresholds):
+    """
+    This function randomly generates the displacement vector based on the wall dimensions and prescribed thresholds.
+    The displacement in the z direction is forced to be 0.
+    The sampling process follows a uniform distribution.
+    :param dims: 3 dimensional vector indicating the dimensions of the wall
+    :param thresholds: 3 dimensional vectors indicating the maximum displacements that can be possible sampled in each direction.
+    :return:
+    """
+    displacements = []
+    max_dis = [thresholds[0]*dims[2], thresholds[1]*dims[2], 0]
+    for max_dis_axis in max_dis:
+        displacements.append(random.uniform(0, max_dis_axis))
+    displacements[2] = 0
+    return displacements, max_dis
+
+
+def sample_rotations(dims, displacements, max_dis):
+    """
+    This function randomly generates the rotation vectors based on the displacement vector and the dimensions of the wall.
+    :param dims:
+    :param displacements:
+    :param max_dis:
+    :return:
+    """
+    theta_x_max = 1.5*displacements[1]/dims[2]
+    theta_y_max = 1.5*displacements[0]/dims[2]
+    theta_z_max = max_dis[1]/(0.5*dims[0])
+    rotations = [random.uniform(0, theta_x_max), random.uniform(0, theta_y_max), random.uniform(0, theta_z_max)]
+    return rotations
+
+
+def prescribed_displacement(dims, thresholds):
+    dis_vec, max_dis = sample_displacements(dims, thresholds)
+    rot_vec = sample_rotations(dims, dis_vec, max_dis)
+    return dis_vec + rot_vec
 
 
 def get_velocities(displacements, rotations, velocity):
@@ -134,9 +173,7 @@ def get_absolute_displacement(dis_percent, wall_dims):
 
 
 if __name__ == '__main__':
-    a = np.array([[1, 2, 4],
-                  [5, 2, 1],
-                  [1, 1, 1]])
-    b = np.array([1, 2, 3])
-    c = np.array([-4, 5, -6])
-    print(get_velocities(b, c, 0.5))
+    dims = [10, 5, 200]
+    threshold = [0.015, 0.01, 0]
+    dis = prescribed_displacement(dims, threshold)
+    print(dis)

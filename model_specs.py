@@ -1,4 +1,4 @@
-from utils import generate_dimension, get_absolute_displacement
+from utils import generate_dimension, get_absolute_displacement, prescribed_displacement
 
 # Generate wall dimensions
 brick_dim_num = [2, 2, 2]
@@ -36,3 +36,7 @@ file_name = 'mytest'
 geometry_file_name1 = 'geo_info1.txt'
 geometry_file_name2 = 'geo_info2.txt'
 
+# Processing
+# if sampling
+# threshold = [0.015, 0.01, 0]
+# displacements_sampled = prescribed_displacement(wall_dim, threshold)
