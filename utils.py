@@ -1,6 +1,41 @@
 import Const
 import numpy as np
 import random
+import math
+
+
+def load_description(displacement, height):
+    """
+    This function returns the relative displacements and rotations in degree for displaying loading conditions in the code.
+    :param displacement: prescribed displacement, 6 dimensional
+    :param height: height of the brick wall - exclusive of boundary blocks
+    :return:
+    """
+    description = []
+    for i in range(3):
+        description.append(100*displacement[i]/height) # Calculate the percentage displacement
+    for i in range(3, 6):
+        description.append(math.degrees(displacement[i]))
+    return description
+
+
+def stop_detection(displacement):
+    """
+    This function chooses the detection axis with a given displacement vector.
+    It only looks at the translational displacements.
+    If the prescribed displacement at the y axis is the largest, the function would allow
+    the 3DEC programme to stop by constantly detecting the displacement in the y direction.
+    :param displacement: 6 dimensional displacement vector
+    :return:
+    """
+    displacement = displacement[0:3]
+    max_magnitude = 0
+    max_index = 0
+    for i, dis_axis in enumerate(displacement):
+        if np.abs(dis_axis) > max_magnitude:
+            max_magnitude = np.abs(dis_axis)
+            max_index = i
+    return max_index, Const.axis_dict[max_index]
 
 
 def sample_displacements(dims, thresholds):
@@ -15,7 +50,7 @@ def sample_displacements(dims, thresholds):
     displacements = []
     max_dis = [thresholds[0]*dims[2], thresholds[1]*dims[2], 0]
     for max_dis_axis in max_dis:
-        displacements.append(random.uniform(0, max_dis_axis))
+        displacements.append(random.uniform(-max_dis_axis, max_dis_axis))
     displacements[2] = 0
     return displacements, max_dis
 
@@ -31,7 +66,7 @@ def sample_rotations(dims, displacements, max_dis):
     theta_x_max = 1.5*displacements[1]/dims[2]
     theta_y_max = 1.5*displacements[0]/dims[2]
     theta_z_max = max_dis[1]/(0.5*dims[0])
-    rotations = [random.uniform(0, theta_x_max), random.uniform(0, theta_y_max), random.uniform(0, theta_z_max)]
+    rotations = [random.uniform(-theta_x_max, theta_x_max), random.uniform(-theta_y_max, theta_y_max), random.uniform(-theta_z_max, theta_z_max)]
     return rotations
 
 
@@ -41,17 +76,21 @@ def prescribed_displacement(dims, thresholds):
     return dis_vec + rot_vec
 
 
-def get_velocities(displacements, rotations, velocity):
+def get_velocities(displacements, velocity, dims):
     """
     This function combines the displacement and rotation vectors and scales the resulting vector such that the largest entry
     has a magnitude equal to the velocity specified.
-    :param displacements:
-    :param rotations:
+    :param displacements: total displacement vector - 6 dimensional
     :param velocity: magnitude of the largest applied velocity in all 6 degrees of freedom.
+    :param dims: dimensions of the wall
     :return:
     """
-    D = list(displacements) + list(rotations)
-    scale = max([abs(i) for i in D]) / abs(velocity)
+    dis = displacements[0:3]
+    rot = displacements[3:6]
+    rotation_dis = [rot[0]*dims[1], rot[1]*dims[0], rot[2]*dims[0]]
+    D = list(dis) + list(rot)
+    D_ = list(dis) + list(rotation_dis)
+    scale = max([abs(i) for i in D_]) / abs(velocity)
     return [i / scale for i in D]
 
 
@@ -108,8 +147,11 @@ class BricksBoundary:
         self.x_lim = [vertices[0][0], vertices[3][0]]
         self.y_lim = [vertices[0][1], vertices[4][1]]
         self.z_lim = [vertices[0][2], vertices[1][2]]
-        self.z_bot = [self.z_lim[0] - Const.brick_dims_UK[2], self.z_lim[0]]
-        self.z_top = [self.z_lim[1], self.z_lim[1] + Const.brick_dims_UK[2]]
+
+        # Reduce the thickness of the boundary blocks
+        thickness = 0.1
+        self.z_bot = [self.z_lim[0] - thickness*Const.brick_dims_UK[2], self.z_lim[0]]
+        self.z_top = [self.z_lim[1], self.z_lim[1] + thickness*Const.brick_dims_UK[2]]
 
         # Additional information
         self.top_gp = [(self.x_lim[0] + self.x_lim[1]) * 0.5, (self.y_lim[0] + self.y_lim[1]) * 0.5,
@@ -117,6 +159,7 @@ class BricksBoundary:
         self.commands = f"block create brick {self.x_lim[0]:.10f} {self.x_lim[1]:.10f} {self.y_lim[0]:.10f} {self.y_lim[1]:.10f} {self.z_bot[0]:.10f} {self.z_bot[1]:.10f} \n" \
                         f"block create brick {self.x_lim[0]:.10f} {self.x_lim[1]:.10f} {self.y_lim[0]:.10f} {self.y_lim[1]:.10f} {self.z_top[0]:.10f} {self.z_top[1]:.10f} \n"
         self.z_lims = [self.z_bot, self.z_top]
+
 
 
 def vector_rotation(alpha, beta, gamma, mode='tait-bryan'):
@@ -173,7 +216,6 @@ def get_absolute_displacement(dis_percent, wall_dims):
 
 
 if __name__ == '__main__':
-    dims = [10, 5, 200]
-    threshold = [0.015, 0.01, 0]
-    dis = prescribed_displacement(dims, threshold)
-    print(dis)
+    pass
+
+
