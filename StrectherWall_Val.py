@@ -1,6 +1,6 @@
 from Classes import BlockWall
 from utils import get_velocities, BricksBoundary, stop_detection
-import model_specs as ms
+import model_specs_val as ms
 
 wall = BlockWall(ms.wall_dim)
 brick_commands = wall.three_DEC_create()
@@ -88,4 +88,3 @@ script = model_creation + boundary_conditions + material_propeterties + loadings
 
 if __name__ == '__main__':
     print(script)
-

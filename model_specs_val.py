@@ -2,7 +2,6 @@ from utils import generate_dimension, get_absolute_displacement, prescribed_disp
 from utils import load_description
 import numpy as np
 import math
-from Const import brick_dims_UK
 
 # Generate wall dimensions
 brick_dim_num = [10, 2, 8]
@@ -15,14 +14,13 @@ large_strain = 'on'
 damping = 0.8
 
 # Material properties and contact law
-joint_spacing = brick_dims_UK[2]
 brick_density = 2000
 E = 4e8
 G = 0.15*E
 friction_coef = 0.5
 contact_model = 'mohr'
-normal_stiffness = E/joint_spacing
-shear_stiffness = G/joint_spacing
+normal_stiffness = 5.87e9
+shear_stiffness = 2.45e9
 cohesion = 0.39e6
 tension = 0.2e6
 friction = math.degrees(math.atan(friction_coef))

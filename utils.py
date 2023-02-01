@@ -212,7 +212,7 @@ def get_absolute_displacement(dis_percent, wall_dims):
     :param wall_dims:
     :return:
     """
-    return np.multiply(np.array(dis_percent), np.array(wall_dims))
+    return [i*wall_dims[2] for i in dis_percent ]
 
 
 if __name__ == '__main__':
