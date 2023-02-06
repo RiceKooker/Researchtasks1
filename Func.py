@@ -2,7 +2,89 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import matplotlib.pyplot as plt
-from Const import side_dict
+from Const import side_dict, grid_point_reader, vertex_index_dict
+import pandas as pd
+
+
+def check_vertex(pos, lims):
+    """
+    This function checks if a grid point is one of the vertices of a block.
+    :param pos: coordinates of the grid point
+    :param lims: extreme coordinate values of the block - [x_min, y_min, z_min, x_max, y_max, z_max]
+    :return: state variable that determine if this grid point is a vertex
+    """
+    is_vertex = False
+    extreme_index = 0
+    num_dims = len(pos)
+    vertex_index = []  # An index used to identify the conventional order of the vertex
+    for i, pos_axis in enumerate(pos):
+        axis_lim = [lims[i], lims[i+num_dims]]
+        if pos_axis in axis_lim:
+            extreme_index += 1
+            v_i = 0
+            if pos_axis == axis_lim[1]:
+                v_i = 1
+            vertex_index.append(v_i)
+    if extreme_index == num_dims:
+        is_vertex = True
+    if len(vertex_index) < num_dims:
+        return is_vertex, None
+    else:
+        return is_vertex, vertex_index
+
+
+def check_vert_df(df):
+    """
+    This function checks if any of the grid points in the dataframe are vertices.
+    :param df: dataframe of grid points belong to the same block.
+    :return: a boolean array indicating which grid points are the vertices and a vertex index list.
+    """
+    gp_position = df[grid_point_reader['Position_labels']].values
+    lim_lower, lim_upper = find_lims_from_gps(gp_position)
+    vertex_bool_list = []
+    vertex_index_list = []
+    for gp_pos in gp_position:
+        is_vertex, vertex_index = check_vertex(gp_pos, (lim_lower+lim_upper))
+        vertex_bool_list.append(is_vertex)
+        if vertex_index is not None:
+            vertex_index_list.append(vertex_index)
+    return vertex_bool_list, vertex_index_list
+
+
+def get_vert_df(df_block):
+    """
+    This function returns the dataframe with ordered vertices, given the dataframe of all grid points of a block.
+    """
+    vertex_bool_list, vertex_index_list = check_vert_df(df_block)
+    df_vertices = pd.DataFrame(df_block.loc[vertex_bool_list].reset_index(drop=True))
+    new_df_index = []
+    for key, value in vertex_index_dict.items():
+        for i, vertex_index in enumerate(vertex_index_list):
+            if value == vertex_index:
+                new_df_index.append(i)
+    df_vertices = df_vertices.reindex(new_df_index)
+    return df_vertices
+
+
+def find_lims_from_gps(gps):
+    """
+    This function finds the limits of the block in the x,y and z directions, it assumes the rotation is zero.
+    :param gps: list of grid point coordinates [number of grid points, 3] - 3 dimensional coordinates
+    :return: 3 dimensional upper bound list, and lower bound list
+    """
+    # Initialize the max and min values in the 3 axis
+    a_large_num = 100000
+    a_small_num = 0
+    mins = [a_large_num for i in range(len(gps[0]))]
+    maxs = [a_small_num for i in range(len(gps[0]))]
+    for gp in gps:
+        for i, axis_value in enumerate(gp):
+            if axis_value > maxs[i]:
+                maxs[i] = axis_value
+            if axis_value < mins[i]:
+                mins[i] = axis_value
+    return mins, maxs
+
 
 
 def find_vertices(CoM, Dims):
@@ -110,6 +192,44 @@ def find_axis_and_direction(side):
     axis = side_info[0]
     direction = side_info[1]
     return axis, direction
+
+
+def verts_to_Dims_CoM(vertices):
+    Dims = [vertices[3][0]-vertices[0][0], vertices[4][1]-vertices[0][1], vertices[1][2]-vertices[0][2]]
+    Dims = np.array(Dims)
+    CoM = np.array(vertices[0]) + 0.5*Dims
+    return CoM, Dims
+
+
+def find_block_CoM(vertices):
+    n = 0
+    CoM = 0
+    for vertex in vertices:
+        CoM += vertex
+        n += 1
+    return CoM / n
+
+
+def find_row_CoM(block_list):
+    CoM = 0
+    v = 0
+    for block in block_list:
+        CoM += block.CoM * block.volume
+        v += block.volume
+    return CoM / v
+
+
+def transform_vertex_3DEC(vertices):
+    temp = vertices.copy()
+    temp[1] = vertices[4]
+    temp[2] = vertices[5]
+    temp[3] = vertices[1]
+    temp[4] = vertices[3]
+    temp[5] = vertices[6]
+    temp[6] = vertices[7]
+    temp[7] = vertices[2]
+    return temp
+
 
 
 def dependency_test():

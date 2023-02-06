@@ -1,69 +1,67 @@
-from Const import output_geometry_file_separator as gfs
+import pandas as pd
+from Const import grid_point_reader
+import numpy as np
 
 
-class GeometryReader:
-    def __init__(self, file_name):
-        self.txt = {gfs[0]: [], gfs[1]: [], gfs[2]: []}
-        self.gridpoints = {}
-        self.vertices = {}
-        self.faces = {}
-        self.blocks = {}
-        with open(file_name, 'rb') as f:
-            lines = f.readlines()
-            separator_count = 0
-            record = False
-            decode_spec = "utf-8"
-            for i, line in enumerate(lines):
-                line = line.decode(decode_spec)
-                line = line.replace('\n', '')
-                if '*' in line and record:
-                    record = False
-                    separator_count += 1
-                    if separator_count > 2:
-                        break
-                if record:
-                    self.txt[gfs[separator_count]].append(line)
-                if gfs[separator_count] in line:
-                    record = True
-
-    def get_block_vertices(self):
-        block_vertices = []
-        gp_read_count = 0
-        # For each block
-        for i, block_txt in enumerate(self.txt[gfs[2]]):
-            vertices = []
-            while len(vertices) < 8:
-                gp_txt = self.txt[gfs[0]][gp_read_count].split()  # Get the split information of one single line of grid point description
-                vertex = [float(j) for j in gp_txt[2:5]]  # Select the coordinates and convert the scientific notation
-                vertices.append(vertex)
-                gp_read_count += 1
-            vertices = transform_vertex_3DEC(vertices)
-            block_vertices.append(vertices)
-
-        return block_vertices
+class GridpointReader:
+    def __init__(self, file_dir):
+        self.df = pd.read_csv(file_dir, sep=" ")
+        num_block = int(self.df.max(axis=0)[grid_point_reader['ID_label']])  # Read the number of blocks
+        blocks = []
+        for i in range(1, num_block+1):
+            # Get the information of all grid points belong to a single block
+            df_block = pd.DataFrame(self.df.loc[self.df[grid_point_reader['ID_label']] == i].reset_index(drop=True))
+            # Read the positions of all grid points
+            gp_position = df_block[grid_point_reader['Position_labels']].values
+            # Read the displacements of all grid points
+            gp_disp = df_block[grid_point_reader['Disp_labels']].values
+            gp_pos_new = []
+            for pos, disp in zip(gp_position, gp_disp):
+                # Calculate the final position and append it to the list
+                gp_pos_new.append(list(np.add(np.array(pos), np.array(disp))))
 
 
-def transform_vertex_3DEC(vertices):
-    temp = vertices.copy()
-    temp[1] = vertices[4]
-    temp[2] = vertices[5]
-    temp[3] = vertices[1]
-    temp[4] = vertices[3]
-    temp[5] = vertices[6]
-    temp[6] = vertices[7]
-    temp[7] = vertices[2]
-    return temp
+def find_vert_from_gps(gps):
+    """
+    This function finds the limits of the block in the x,y and z directions
+    :param gps: list of grid point coordinates [number of grid points, 3] - 3 dimensional coordinates
+    :return: 3 dimensional upper bound list, and lower bound list
+    """
+    # Initialize the max and min values in the 3 axis
+    a_large_num = 100000
+    a_small_num = 0
+    mins = [a_large_num for i in range(len(gps[0]))]
+    maxs = [a_small_num for i in range(len(gps[0]))]
+    for gp in gps:
+        for i, axis_value in enumerate(gp):
+            if axis_value > maxs[i]:
+                maxs[i] = axis_value
+            if axis_value < mins[i]:
+                mins[i] = axis_value
+    return maxs, mins
+
+
+def create_block_gps(gps):
+    maxs, mins = find_vert_from_gps(gps)
+    dims = []
+    for lim_upper, lim_lower in zip(maxs, mins):
+        dims.append(lim_upper - lim_lower)
+    dims = np.array(dims)
+    CoM = np.array(mins) + dims
+
+
+
+
+
 
 
 if __name__ == '__main__':
-    filename = 'text_function2.txt'
-    a = GeometryReader(filename)
-    for key in a.txt:
-        sample = a.txt[key][0]
-        sample_split = sample.split()
-        print(sample_split)
-        print(sample_split[3])
-        print(float(sample_split[3]))
-    for block_verts in a.get_block_vertices():
-        print(block_verts)
+    df1 = pd.read_csv("Position2_test.txt", sep=" ")
+    df2 = pd.DataFrame(df1.loc[df1['Block_ID'] == 1].reset_index(drop=True))
+    print(df2.head())
+    sample_gp = GridpointReader("Position2_test.txt")
+
+    sp = [[1,2,3],[3,4,5]]
+    a,b = find_vert_from_gps(sp)
+
 

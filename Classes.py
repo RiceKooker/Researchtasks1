@@ -1,9 +1,18 @@
 import numpy as np
 import Func
 from colorama import Fore, Style
-from Const import origin, brick_dims_UK
+from Const import origin, brick_dims_UK, grid_point_reader
 from model_specs import brick_dim_num
 from Const import output_geometry_file_separator as gfs
+import pandas as pd
+import Func as fc
+
+
+class BlockDraw:
+    def __init__(self, vertices, transform=None):
+        if transform is not None:
+            vertices = transform(vertices)
+        self.Vertices = vertices
 
 
 class Block1:
@@ -27,7 +36,7 @@ class Block1:
         for i, vertex in enumerate(self.Vertices):
             self.Vertices[i] = vertex + dis_vec
 
-        self.CoM = find_block_CoM(self.Vertices)
+        self.CoM = fc.find_block_CoM(self.Vertices)
 
     def duplicate(self, side, new_Dims=None):
         """
@@ -57,28 +66,15 @@ class Block1:
 
 
 class Block(Block1):
+    """
+    This class is for creation commands. And it does not support rotations.
+    """
     def __init__(self, CoM=None, Dims=None, vertices=None):
         if vertices is None:
             Block1.__init__(self, CoM, Dims)
         else:
-            CoM, Dims = verts_to_Dims_CoM(vertices)
+            CoM, Dims = fc.verts_to_Dims_CoM(vertices)
             Block1.__init__(self, CoM, Dims)
-
-
-def verts_to_Dims_CoM(vertices):
-    Dims = [vertices[3][0]-vertices[0][0], vertices[4][1]-vertices[0][1], vertices[1][2]-vertices[0][2]]
-    Dims = np.array(Dims)
-    CoM = np.array(vertices[0]) + 0.5*Dims
-    return CoM, Dims
-
-
-def find_block_CoM(vertices):
-    n = 0
-    CoM = 0
-    for vertex in vertices:
-        CoM += vertex
-        n += 1
-    return CoM / n
 
 
 class BlockRow1:
@@ -94,7 +90,7 @@ class BlockRow1:
             block_list.append(new_block)
             block_prev = new_block
         self.block_list = block_list
-        self.CoM = find_row_CoM(self.block_list)
+        self.CoM = fc.find_row_CoM(self.block_list)
 
     def add_block(self, side, num, block_dims=None):
         if side not in ['right', 'left']:
@@ -113,16 +109,7 @@ class BlockRow1:
                 block_new = block_prev.duplicate(side, block_dims)
                 self.block_list.append(block_new)
                 block_prev = block_new
-        self.CoM = find_row_CoM(self.block_list)
-
-
-def find_row_CoM(block_list):
-    CoM = 0
-    v = 0
-    for block in block_list:
-        CoM += block.CoM * block.volume
-        v += block.volume
-    return CoM / v
+        self.CoM = fc.find_row_CoM(self.block_list)
 
 
 class BlockRow(BlockRow1):
@@ -142,7 +129,7 @@ class BlockRow(BlockRow1):
                 BlockRow1.__init__(self, start_point, length, Block_Dims)
         else:
             self.block_list = block_list
-        self.CoM = find_row_CoM(self.block_list)
+        self.CoM = fc.find_row_CoM(self.block_list)
 
     def duplicate(self, side):
         """
@@ -167,24 +154,13 @@ class BlockRow(BlockRow1):
         """
         for i, block in enumerate(self.block_list):
             self.block_list[i].move(dis_vec)
-        self.CoM = find_row_CoM(self.block_list)
+        self.CoM = fc.find_row_CoM(self.block_list)
 
     def three_DEC_create(self):
         total_commands = ''
         for block in self.block_list:
             total_commands += block.three_DEC_create()
         return total_commands
-
-
-def create_type2_row(num_x, block_dims):
-    Br = BlockRow(start_point=origin, num_blocks=num_x-1, Block_Dims=block_dims)
-
-    half_dims = np.array(block_dims)
-    half_dims[0] = half_dims[0]*0.5
-    Br.add_block('left', 1, half_dims)
-    Br.add_block('right', 1, half_dims)
-    Br.move(np.array([half_dims[0], 0, 0]))
-    return Br
 
 
 # class BlockWall(BlockRow):
@@ -297,7 +273,7 @@ class BlockGroup:
     def __init__(self, vert_list):
         self.block_list = []
         for block_verts in vert_list:
-            self.block_list.append(Block(vertices=block_verts))
+            self.block_list.append(BlockDraw(vertices=block_verts))
 
     def draw(self):
         Func.draw_blocks(self.block_list)
@@ -347,22 +323,60 @@ class GeometryReader:
                 vertex = [float(j) for j in gp_txt[2:5]]  # Select the coordinates and convert the scientific notation
                 vertices.append(vertex)
                 gp_read_count += 1
-            vertices = transform_vertex_3DEC(vertices)
+            vertices = fc.transform_vertex_3DEC(vertices)
             block_vertices.append(vertices)
 
         return block_vertices
 
 
-def transform_vertex_3DEC(vertices):
-    temp = vertices.copy()
-    temp[1] = vertices[4]
-    temp[2] = vertices[5]
-    temp[3] = vertices[1]
-    temp[4] = vertices[3]
-    temp[5] = vertices[6]
-    temp[6] = vertices[7]
-    temp[7] = vertices[2]
-    return temp
+class GridpointReader:
+    def __init__(self, file_dir):
+        self.df = pd.read_csv(file_dir, sep=" ")
+        num_block = int(self.df.max(axis=0)[grid_point_reader['ID_label']])  # Read the number of blocks
+        self.blocks = []
+        for i in range(1, num_block + 1):
+            # Get the information of all grid points belong to a single block
+            df_block = pd.DataFrame(self.df.loc[self.df[grid_point_reader['ID_label']] == i].reset_index(drop=True))
+            # Pick the grid points at vertices - ordered
+            df_vertices = pd.DataFrame(fc.get_vert_df(df_block)).reset_index(drop=True)
+            # Read the displacements and positions of all vertices
+            vert_disp = df_vertices[grid_point_reader['Disp_labels']].values
+            vert_pos = df_vertices[grid_point_reader['Position_labels']].values
+            gp_pos_new = []
+            for pos, disp in zip(vert_pos, vert_disp):
+                # Calculate the final position and append it to the list
+                gp_pos_new.append(list(np.add(np.array(pos), np.array(disp))))
+            self.blocks.append(BlockDraw(vertices=gp_pos_new))
+
+    def draw(self):
+        Func.draw_blocks(self.blocks)
+
+
+def create_block_gps(gps):
+    """
+    This function creates a block object based on the grid point coordinates
+    :param gps: list of all grid point coordinates
+    :return: a block object defined by the grid points
+    """
+    maxs, mins = fc.find_lims_from_gps(gps)
+    Dims = []
+    for lim_upper, lim_lower in zip(maxs, mins):
+        Dims.append(lim_upper - lim_lower)
+    Dims = np.array(Dims)
+    CoM = np.array(mins) + Dims*0.5
+    return Block(CoM, Dims)
+
+
+def create_type2_row(num_x, block_dims):
+    Br = BlockRow(start_point=origin, num_blocks=num_x-1, Block_Dims=block_dims)
+
+    half_dims = np.array(block_dims)
+    half_dims[0] = half_dims[0]*0.5
+    Br.add_block('left', 1, half_dims)
+    Br.add_block('right', 1, half_dims)
+    Br.move(np.array([half_dims[0], 0, 0]))
+    return Br
+
 
 if __name__ == '__main__':
     # num_blocks = brick_dim_num
@@ -371,8 +385,11 @@ if __name__ == '__main__':
     # print(f'Number of rows: {len(W1)}')
     # W1.draw()
 
-    filename = 'geo_info2.txt'
-    a = GeometryReader(filename)
-    sample_bg = BlockGroup(a.get_block_vertices())
-    sample_bg.draw()
+    # filename = 'geo_info2.txt'
+    # a = GeometryReader(filename)
+    # sample_bg = BlockGroup(a.get_block_vertices())
+    # sample_bg.draw()
+
+    sample_gp = GridpointReader("Position2.txt")
+    sample_gp.draw()
 
