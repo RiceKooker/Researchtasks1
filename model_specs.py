@@ -11,7 +11,7 @@ wall_dim = generate_dimension(brick_dim_num)
 # -------------------------------------------------------------------------------------------------
 
 # 3DEC setting
-large_strain = 'on'
+large_strain = 'off'
 damping = 0.8
 
 # Material properties and contact law

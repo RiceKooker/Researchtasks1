@@ -75,7 +75,7 @@ fish define psc_dis
     ii = io.out('Prescribed displacement is reached!')
     ii = io.out('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
     command
-        block export filename '{ms.geometry_file_name2}'
+        [dump]
     endcommand
 end
 [psc_dis]
@@ -83,8 +83,31 @@ end
 model save '{ms.file_name}'
 """
 
+function_definition = """
+; Definition of necessary functions used
+fish def dump 
+    Gp_information = list
+    Column_names = list
+    Column_names('end') = 'Block_ID Grid_point_ID Pos_x Pos_y Pos_z Disp_x Disp_y Disp_z'
+    loop foreach bgpp block.gp.list
+         blp = block.gp.hostblock(bgpp)
+         block_i = block.id(blp)
+         gp_i = block.gp.id(bgpp)
+         pos = block.gp.pos(bgpp)
+         disp = block.gp.disp(bgpp)
+         Gp_information('end') = string(block_i) + ' ' +string(gp_i) + ' ' ...
+          + string(pos->x)+' '+string(pos->y)+' '+string(pos->z) + ' ' ...
+          + string(disp->x)+' '+string(disp->y)+' '+string(disp->z)
+    end_loop                               
+    file.open('Position2','write','text')
+    file.write(Column_names)
+    file.write(Gp_information)            
+    file.close       
+end 
+"""
 
-script = model_creation + boundary_conditions + material_propeterties + loadings
+
+script = model_creation + boundary_conditions + function_definition + material_propeterties + loadings
 
 if __name__ == '__main__':
     print(script)

@@ -389,7 +389,7 @@ if __name__ == '__main__':
     # a = GeometryReader(filename)
     # sample_bg = BlockGroup(a.get_block_vertices())
     # sample_bg.draw()
-
-    sample_gp = GridpointReader("Position2.txt")
+    a = 'C:\\Users\\dgian\\Documents\\Itasca\\3dec700\\My Projects\\Position2.txt'
+    sample_gp = GridpointReader(a)
     sample_gp.draw()
 
