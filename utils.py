@@ -148,7 +148,7 @@ class BricksBoundary:
         self.y_lim = [vertices[0][1], vertices[4][1]]
         self.z_lim = [vertices[0][2], vertices[1][2]]
 
-        # Reduce the thickness of the boundary blocks
+        # Define the thickness of the boundary blocks
         thickness = 0.1
         self.z_bot = [self.z_lim[0] - thickness*Const.brick_dims_UK[2], self.z_lim[0]]
         self.z_top = [self.z_lim[1], self.z_lim[1] + thickness*Const.brick_dims_UK[2]]
