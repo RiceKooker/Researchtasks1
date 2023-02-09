@@ -188,6 +188,7 @@ class BlockWall:
             num_bricks.append(int(round(w_dim/b_dim)))
         num_x, num_y, num_z = num_bricks[0], num_bricks[1], num_bricks[2]
 
+        self.actual_dim = np.multiply(np.array(num_bricks), np.array(block_dims))
         self.num_blocks = num_bricks
 
         row_list = []
