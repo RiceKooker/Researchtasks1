@@ -1,5 +1,5 @@
 from Classes import BlockWall
-from utils import get_velocities, BricksBoundary, stop_detection
+from utils import get_velocities, BricksBoundary, stop_detection, print_list, print_location
 import model_specs_val as ms
 
 wall = BlockWall(ms.wall_dim)
@@ -18,8 +18,8 @@ block mech damp local {ms.damping}
 boundary_conditions = f"""
 block face triangulate radial-8
 ;block face triangulate edge-max 0.01  ;Use this for finer discretization
-block group 'BOT' range pos-z {boundary_bricks.z_lims[0][0]} {boundary_bricks.z_lims[0][1]}
-block group 'TOP' range pos-z {boundary_bricks.z_lims[1][0]} {boundary_bricks.z_lims[1][1]}
+block group 'BOT' range pos-z {boundary_bricks.z_lims[0][0]:.8f} {boundary_bricks.z_lims[0][1]:.8f}
+block group 'TOP' range pos-z {boundary_bricks.z_lims[1][0]:.8f} {boundary_bricks.z_lims[1][1]:.8f}
 
 ;BOUNDARY CONDITION
 block fix range group 'BOT'
@@ -37,7 +37,7 @@ block contact property stiffness-normal {ms.boundary_spec['normal_stiffness']} s
 block contact property stiffness-normal {ms.boundary_spec['normal_stiffness']} stiffness-shear {ms.boundary_spec['shear_stiffness']} ten {ms.boundary_spec['tension']} cohesion {ms.boundary_spec['cohesion']} fric {ms.boundary_spec['friction']} fric-residual {ms.boundary_spec['fric_res']} cohesion-residual {ms.boundary_spec['cohesion_res']} Gf_tension {ms.boundary_spec['Gf_tension']} Gf_shear {ms.boundary_spec['Gf_shear']} Gc_compression {ms.boundary_spec['Gf_compression']} fc {ms.boundary_spec['fc']} range group-intersection '{ms.group_name_bot}' '{ms.group_name_body}'
 
 ;Select face for vertical pressure
-block face group 'TOPFACE' range pos-z {boundary_bricks.z_top[1]}
+block face group 'TOPFACE' range pos-z {boundary_bricks.z_top[1]:.8f}
 """
 
 
@@ -50,6 +50,8 @@ model solve
 block face apply stress-zz {ms.vertical_pressure} range group 'TOPFACE'  ; Select the top face.
 model solve
 block fix range group 'TOP'
+
+block history displacement-{ms.cyclic_specs['load_direction']} position {print_location(boundary_bricks.top_gp)} 
 
 ;Apply loading
 [cyclic_test]
@@ -73,7 +75,7 @@ fish def dump
           + string(pos->x)+' '+string(pos->y)+' '+string(pos->z) + ' ' ...
           + string(disp->x)+' '+string(disp->y)+' '+string(disp->z)
     end_loop                               
-    file.open('Position2','write','text')
+    file.open('{ms.gp_file_name}','write','text')
     file.write(Column_names)
     file.write(Gp_information)            
     file.close       
@@ -84,7 +86,7 @@ end
 ;Prescribed displacement: [{ms.load_descriptions[0]:.2f}%, {ms.load_descriptions[1]:.2f}%, 0] of wall height
 ;Prescribed rotations: [{ms.load_descriptions[3]:.3f}, {ms.load_descriptions[4]:.3f}, {ms.load_descriptions[5]:.3f}] in degrees
 fish define psc_dis
-    top_gp = block.gp.near{tuple(boundary_bricks.top_gp)}
+    top_gp = block.gp.near({print_list(boundary_bricks.top_gp)})
     top_dis = math.abs(block.gp.disp.{stop_axis}(top_gp))
     command
         block apply velocity-x {velocities[0]} range group 'TOP'
@@ -111,9 +113,9 @@ end
 
 ;Cyclic test function
 fish define cyclic_test
-    top_gp = block.gp.near{tuple(boundary_bricks.top_gp)}
+    top_gp = block.gp.near({print_list(boundary_bricks.top_gp)})
     top_dis = math.abs(block.gp.disp.y(top_gp))
-    disp_amp = list.seq{tuple(ms.cyclic_specs['disp_amps'])}
+    disp_amp = list.seq({print_list(ms.cyclic_specs['disp_amps'])})
     cycle_n = {ms.cyclic_specs['n_cycle']}
     velocity = {ms.cyclic_specs['velocity']}
     block_group = '{ms.cyclic_specs['load_group']}'
@@ -148,6 +150,9 @@ fish define cyclic_test
         endcommand
         top_dis = block.gp.disp.{ms.cyclic_specs['load_direction']}(top_gp)
     endloop
+    command
+        [dump]
+    endcommand
 end
 """
 

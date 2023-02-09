@@ -4,6 +4,29 @@ import random
 import math
 
 
+def print_list(a_list):
+    """This function is for printing lists in 3DEC script. The precision can be specified."""
+    str_out = ''
+    for i, num in enumerate(a_list):
+        str_add = f'{num:.8f}, '
+        if i+1 == len(a_list):
+            str_add = f'{num:.8f}'
+        str_out += str_add
+    return str_out
+
+
+def print_location(a_list):
+    """This function is for printing lists in 3DEC script. The precision can be specified."""
+    str_out = ''
+    for i, num in enumerate(a_list):
+        str_add = f'{num:.8f} '
+        if i+1 == len(a_list):
+            str_add = f'{num:.8f}'
+        str_out += str_add
+    return str_out
+
+
+
 def load_description(displacement, height):
     """
     This function returns the relative displacements and rotations in degree for displaying loading conditions in the code.
@@ -216,6 +239,7 @@ def get_absolute_displacement(dis_percent, wall_dims):
 
 
 if __name__ == '__main__':
-    pass
+    a = [1, 2, 3, 4]
+    print(print_list(a))
 
 
