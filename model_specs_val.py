@@ -19,22 +19,28 @@ damping = 0.8
 # Material properties and contact law
 joint_spacing = brick_dims_UK[2]
 brick_density = 1652
-E = 1.491e9
-G = 0.5e9
-friction_coef = 0.58
+E = 1.491e9  # DIANA report - table
+E = 1.5*E
+G = 0.5e9  # DIANA report - table
+G = 1.5*G
+friction_coef = 0.7  # DIANA report - text
 contact_model = 'example'
 normal_stiffness = E/joint_spacing
 shear_stiffness = G/joint_spacing
-cohesion = 0.23e6
+cohesion = 0.23e6  # DIANA report - text
 cohesion_res = 0
-tension = 0.04e6
+tension = 0.04e6  # DIANA report - text
+fc = 6.2e6  # DIANA report - table
 friction = math.degrees(math.atan(friction_coef))
 # friction = 31.8
 fric_res = friction
-Gf_tension = 10
-Gf_compression = 40e3
-Gf_shear = 50
-fc = 6.2e6
+# Gf_tension = 10  # DIANA report - table
+Gf_tension = tension*0.029e-3  # Empirical relationship
+# Gf_compression = 40e3  # DIANA report - table
+# Gf_shear = 50  # DIANA report - table
+Gf_shear = Gf_tension*10  # Empirical relationship
+Gf_compression = fc*1.6e-3  # Empirical relationship - if fc < 12e6
+
 
 # -------------------------------------------------------------------------------------------------
 # Loading specs, user specified
@@ -60,10 +66,11 @@ cyclic_specs = {
 }
 
 # Storage specs
-file_name = 'DIANA_val_test'
-geometry_file_name1 = 'DIANA_val_test_geo1.txt'
+test_num = str(2)
+file_name = 'DIANA_val_test' + test_num
+geometry_file_name1 = 'DIANA_val_test_geo1' + test_num + '.txt'
 geometry_file_name2 = 'geo_info2.txt'
-gp_file_name = 'Gp_info_DIANA_val'
+gp_file_name = 'Gp_info_DIANA_val' + test_num
 
 # -------------------------------------------------------------------------------------------------
 # Loading specs, sampling
@@ -80,14 +87,14 @@ boundary_spec = {
     'normal_stiffness': normal_stiffness,
     'shear_stiffness': shear_stiffness,
     'cohesion': cohesion*100,
-    'tension': tension*100,
+    'tension': tension,
     'friction': 44,
     'fric_res': 44,
     'cohesion_res': cohesion_res,
-    'Gf_tension': Gf_tension*100,
-    'Gf_compression': Gf_compression*100,
+    'Gf_tension': Gf_tension,
+    'Gf_compression': Gf_compression,
     'Gf_shear': Gf_shear*100,
-    'fc': fc*100
+    'fc': fc
 }
 
 # 3DEC variables

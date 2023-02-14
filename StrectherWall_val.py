@@ -13,7 +13,7 @@ model new
 model configure plugins 
 model large-strain {ms.large_strain}
 block mech damp local {ms.damping}
-""" + brick_commands + boundary_bricks.commands + f"""block export filename '{ms.geometry_file_name1}'"""
+""" + brick_commands + boundary_bricks.commands
 
 boundary_conditions = f"""
 block face triangulate radial-8

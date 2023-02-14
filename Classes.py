@@ -162,6 +162,9 @@ class BlockRow(BlockRow1):
             total_commands += block.three_DEC_create()
         return total_commands
 
+    def draw(self):
+        Func.draw_blocks(self.block_list)
+
 
 # class BlockWall(BlockRow):
 #     def __init__(self, start_point=None, Block_Dims=brick_dims_UK, num_blocks=None, row_list=None):
