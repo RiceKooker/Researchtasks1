@@ -86,6 +86,25 @@ def find_lims_from_gps(gps):
     return mins, maxs
 
 
+def find_lims_from_points(points):
+    """
+    This function finds the limits of all the points in 'points' in the x,y and z directions.
+    :param points: list of point coordinates [number of points, 3] - 3 dimensional coordinates
+    :return: 3 dimensional upper bound list, and lower bound list
+    """
+    # Initialize the max and min values in the 3 axis
+    a_large_num = 100000
+    a_small_num = 0
+    mins = [a_large_num for i in range(len(points[0]))]
+    maxs = [a_small_num for i in range(len(points[0]))]
+    for point in points:
+        for i, axis_value in enumerate(point):
+            if axis_value > maxs[i]:
+                maxs[i] = axis_value
+            if axis_value < mins[i]:
+                mins[i] = axis_value
+    return mins, maxs
+
 
 def find_vertices(CoM, Dims):
     """
@@ -96,7 +115,7 @@ def find_vertices(CoM, Dims):
     :return:
     """
     vertices = np.zeros([8, 3])
-    half_Dims = 0.5*Dims
+    half_Dims = 0.5*np.array(Dims)
     x_min = CoM[0] - half_Dims[0]
     x_max = CoM[0] + half_Dims[0]
     y_min = CoM[1] - half_Dims[1]
@@ -165,6 +184,43 @@ def draw_blocks(block_list, wall_vert=None):
         ax.scatter3D(wall_vert[:, 0], wall_vert[:, 1], wall_vert[:, 2], marker='^', c='#010812', s=50)
     for block in block_list:
         vertices = transform_vertices(block.Vertices)
+        x = vertices[:, 0]
+        y = vertices[:, 1]
+        z = vertices[:, 2]
+        # vertices = [list(zip(x, y, z))]
+        ax.scatter3D(vertices[:, 0], vertices[:, 1], vertices[:, 2])
+        verts = [[vertices[0], vertices[1], vertices[2], vertices[3]],
+                 [vertices[4], vertices[5], vertices[6], vertices[7]],
+                 [vertices[0], vertices[1], vertices[5], vertices[4]],
+                 [vertices[2], vertices[3], vertices[7], vertices[6]],
+                 [vertices[1], vertices[2], vertices[6], vertices[5]],
+                 [vertices[4], vertices[7], vertices[3], vertices[0]]]
+        ax.add_collection3d(Poly3DCollection(verts, facecolors='cyan', linewidths=1, edgecolors='r', alpha=.20))
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.set_box_aspect([ub - lb for lb, ub in (getattr(ax, f'get_{a}lim')() for a in 'xyz')])
+    # ax.get_xaxis().set_ticks([])
+    # ax.get_yaxis().set_ticks([])
+    # ax.get_zaxis().set_ticks([])
+    plt.show()
+
+
+def draw_blocks2(block_list, wall_vert=None):
+    """
+    This function draws all the block objects given in the block_list.
+    :param block_list:
+    :param wall_vert: optional. This is to highlight the corners of the wall.
+    :return:
+    """
+    fig = plt.figure()
+    ax = Axes3D(fig, auto_add_to_figure=False)
+    fig.add_axes(ax)
+    if wall_vert is not None:
+        # This is to highlight the vertices of the wall.
+        ax.scatter3D(wall_vert[:, 0], wall_vert[:, 1], wall_vert[:, 2], marker='^', c='#010812', s=50)
+    for block in block_list:
+        vertices = transform_vertices(block.vertices)
         x = vertices[:, 0]
         y = vertices[:, 1]
         z = vertices[:, 2]

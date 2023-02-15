@@ -38,6 +38,7 @@ class Block1:
 
         self.CoM = fc.find_block_CoM(self.Vertices)
 
+
     def duplicate(self, side, new_Dims=None):
         """
         This function creates another block with potentially different dimensions to the side of the current block.
