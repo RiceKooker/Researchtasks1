@@ -161,8 +161,8 @@ script = model_creation + boundary_conditions + material_propeterties + function
 
 if __name__ == '__main__':
     print(script)
-    with open('C:\\Users\\dgian\\Documents\\Itasca\\3dec700\\My Projects\\DIANA_val.dat', 'w') as text_file:
-        text_file.write(script)
+    # with open('C:\\Users\\dgian\\Documents\\Itasca\\3dec700\\My Projects\\DIANA_val.dat', 'w') as text_file:
+    #     text_file.write(script)
 
 
 

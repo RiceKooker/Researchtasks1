@@ -20,9 +20,9 @@ damping = 0.8
 joint_spacing = brick_dims_UK[2]
 brick_density = 1652
 E = 1.491e9  # DIANA report - table
-E = 1.5*E
+# E = 1.5*E
 G = 0.5e9  # DIANA report - table
-G = 1.5*G
+# G = 1.5*G
 friction_coef = 0.7  # Higher than the value in DIANA report
 contact_model = 'example'
 normal_stiffness = E/joint_spacing
@@ -65,8 +65,17 @@ cyclic_specs = {
     'load_group': 'TOP'
 }
 
+# Push over test specs
+push_over_specs = {
+    'load_direction': 'x',
+    'amp': 7e-3,
+    'velocity': 0.005,
+    'n_cycle': 1000,
+    'load_group': 'TOP',
+}
+
 # Storage specs
-test_num = str(2)
+test_num = str(3)
 file_name = 'DIANA_val_test' + test_num
 geometry_file_name1 = 'DIANA_val_test_geo1' + test_num + '.txt'
 geometry_file_name2 = 'geo_info2.txt'

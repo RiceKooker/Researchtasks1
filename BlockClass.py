@@ -1,7 +1,7 @@
 import Classes
 import Func
 from Func import find_axis_and_direction, find_lims_from_points, draw_blocks
-
+import numpy as np
 
 class Block:
     def __init__(self, x_lim, y_lim, z_lim):
@@ -89,7 +89,11 @@ class Block:
     def draw(self):
         Func.draw_blocks2([self])
 
-
+    def three_DEC_create(self):
+        x_lim = [self.vertices[0][0], self.vertices[3][0]]
+        y_lim = [self.vertices[0][1], self.vertices[4][1]]
+        z_lim = [self.vertices[0][2], self.vertices[1][2]]
+        return f"block create brick {x_lim[0]:.10f} {x_lim[1]:.10f} {y_lim[0]:.10f} {y_lim[1]:.10f} {z_lim[0]:.10f} {z_lim[1]:.10f} \n"
 
 
 # class Block(Classes.Block):
@@ -119,37 +123,61 @@ class BlockGroup:
             self.block_list += other_blocks.block_list
         else:
             self.block_list.append(other_blocks)
-        return self.block_list
 
     def move(self, dis_vec):
         for block in self.block_list:
             block.move(dis_vec)
 
-    def duplicate(self, side, disp_vec_in=None):
-        mins, maxs = find_lims_from_points(self.block_list[0].vertices)
-        for block in self.block_list:
-            vert_test = list(block.vertices)
-            vert_test.append(mins)
-            vert_test.append(maxs)
-            mins, maxs = find_lims_from_points(vert_test)
-        dims_envelop = []
-        for min_v, max_v in zip(mins, maxs):
-            dims_envelop.append(max_v - min_v)
-        disp_vec = [0, 0, 0]
-        axis, direction = find_axis_and_direction(side)
-        disp_vec[axis] = direction * dims_envelop[axis]
-        if disp_vec_in is not None:
-            disp_vec = [a+b for a, b in zip(disp_vec, disp_vec_in)]
+    def duplicate(self, side, times=1, disp_vec_in=None):
+        if disp_vec_in is None:
+            disp_vec_in = [0, 0, 0]
         new_list = []
-        for block in self.block_list:
-            new_list.append(block.duplicate(side=side, vec=disp_vec))
+        for i in range(times):
+            mins, maxs = find_lims_from_points(self.block_list[0].vertices)
+            for block in self.block_list:
+                vert_test = list(block.vertices)
+                vert_test.append(mins)
+                vert_test.append(maxs)
+                mins, maxs = find_lims_from_points(vert_test)
+            dims_envelop = []
+            for min_v, max_v in zip(mins, maxs):
+                dims_envelop.append(max_v - min_v)
+            disp_vec = [0, 0, 0]
+            axis, direction = find_axis_and_direction(side)
+            disp_vec[axis] = direction * dims_envelop[axis]
+            disp_vec = [a+b for a, b in zip(disp_vec, disp_vec_in)]
+            disp_vec = [a*(i+1) for a in disp_vec]
+            for block in self.block_list:
+                new_list.append(block.duplicate(side=side, vec=disp_vec))
         return self.block_list + new_list
 
-    def expand(self, side, disp_vec=None):
-        self.block_list = self.duplicate(side, disp_vec)
+    def expand(self, side, times=1, disp_vec=None):
+        self.block_list = self.duplicate(side, times, disp_vec)
 
     def draw(self):
         Func.draw_blocks2(block_list=self.block_list)
+
+    def three_DEC_create(self):
+        total_command = ''
+        for block in self.block_list:
+            total_command += block.three_DEC_create()
+        return total_command
+
+    def find_vertices(self):
+        """
+        This function returns the vertices of the wall following the same ordering condition as blocks.
+        :return:
+        """
+        max_dims = np.zeros((3,))
+        min_dims = 100000*np.ones((3,))
+        for block in self.block_list:
+            for vertex in block.vertices:
+                for axis, axis_value in enumerate(vertex):
+                    if axis_value < min_dims[axis]:
+                        min_dims[axis] = axis_value
+                    if axis_value > max_dims[axis]:
+                        max_dims[axis] = axis_value
+        return Func.find_vertices_from_max(min_dims, max_dims)
 
 
 if __name__ == '__main__':
@@ -161,12 +189,7 @@ if __name__ == '__main__':
     block3 = block2.duplicate(side='top', new_dims=dims3)
     block4 = block3.duplicate(side='back', new_dims=dims2)
     blockgroup1 = BlockGroup(block1)
-    blockgroup1.add(block2)
-    blockgroup1.add(block3)
-    blockgroup1.add(block4)
-    blockgroup1.expand('right', [1, 0, 0])
-    blockgroup1.expand('bot', [0, 0, -2])
-    blockgroup1.expand('front')
+    blockgroup1.expand('back')
     blockgroup1.draw()
 
 
