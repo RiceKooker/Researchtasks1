@@ -149,10 +149,10 @@ class BlockGroup:
             disp_vec = [a*(i+1) for a in disp_vec]
             for block in self.block_list:
                 new_list.append(block.duplicate(side=side, vec=disp_vec))
-        return self.block_list + new_list
+        return BlockGroup(new_list)
 
     def expand(self, side, times=1, disp_vec=None):
-        self.block_list = self.duplicate(side, times, disp_vec)
+        self.block_list += self.duplicate(side, times, disp_vec).block_list
 
     def draw(self):
         Func.draw_blocks2(block_list=self.block_list)
