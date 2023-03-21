@@ -1,17 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from Plotting.PlotReconstruction_comparison import three_dec_plot
 
 
-file_name = 'C:\\Users\\dgian\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test3\\force_displacement.csv'
+file_name = 'C:\\Users\\mans3851\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test4\\force_displacement.csv'
 df = pd.read_csv('data/cyclic_test_low.csv', names=['x', 'y'])
-df_3DEC = pd.read_csv(file_name)
-col_names = []
-for col in df_3DEC.columns:
-    col_names.append(col)
 plt.scatter(df['x'].tolist(), df['y'].tolist(), marker='o', s=8, label='Experiment')
-x_3DEC = [i*1000 for i in df_3DEC[col_names[0]].tolist()]
-y_3DEC = [i/1000 for i in df_3DEC[col_names[1]].tolist()]
-plt.scatter(x_3DEC, y_3DEC, marker='o', color='r', s=0.1, label='Simulation')
+three_dec_plot(file_name, 'Simulation', alpha=0.2, prop=0.1)
 plt.axhline(y=0, color='gray')
 plt.axvline(x=0, color='gray')
 plt.legend()
