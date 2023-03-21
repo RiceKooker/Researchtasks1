@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from PlotReconstruction_comparison import three_dec_plot
 
 
 file_name = 'C:\\Users\\dgian\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_high_wall\\Cyclic1\\force_displacement.csv'
@@ -9,9 +10,7 @@ col_names = []
 for col in df_3DEC.columns:
     col_names.append(col)
 plt.scatter(df['x'].tolist(), df['y'].tolist(), marker='o', s=8, label='Experiment')
-x_3DEC = [i*1000 for i in df_3DEC[col_names[0]].tolist()]
-y_3DEC = [i/1000 for i in df_3DEC[col_names[1]].tolist()]
-plt.scatter(x_3DEC, y_3DEC, marker='o', color='r', s=8, alpha=0.1, label='Simulation')
+three_dec_plot(file_name, 'Simulation', alpha=0.5, prop=0.01)
 plt.axhline(y=0, color='gray')
 plt.axvline(x=0, color='gray')
 plt.legend(markerscale=4)

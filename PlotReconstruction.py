@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-file_name = 'C:\\Users\\dgian\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test2\\New folder\\force_displacement.csv'
+file_name = 'C:\\Users\\dgian\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test3\\force_displacement.csv'
 df = pd.read_csv('data/cyclic_test_low.csv', names=['x', 'y'])
 df_3DEC = pd.read_csv(file_name)
 col_names = []
