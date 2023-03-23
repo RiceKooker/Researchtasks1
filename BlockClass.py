@@ -63,7 +63,7 @@ class Block:
         for i, vertex in enumerate(self.vertices):
             self.vertices[i] = [a+b for a, b in zip(vertex, vec)]
 
-    def duplicate(self, side, new_dims=None, vec=None):
+    def duplicate(self, side=None, new_dims=None, vec=None):
         """
         Create a new block with potentially different dimensions. Place the block to one side of the self block.
         Or move the block with a displacement vector
