@@ -12,7 +12,7 @@ class BlockDraw:
     def __init__(self, vertices, transform=None):
         if transform is not None:
             vertices = transform(vertices)
-        self.Vertices = vertices
+        self.vertices = vertices
 
 
 class Block1:
@@ -340,7 +340,7 @@ class GridpointReader:
     def __init__(self, file_dir):
         self.df = pd.read_csv(file_dir, sep=" ")
         num_block = int(self.df.max(axis=0)[grid_point_reader['ID_label']])  # Read the number of blocks
-        self.blocks = []
+        self.block_list = []
         for i in range(1, num_block + 1):
             # Get the information of all grid points belong to a single block
             df_block = pd.DataFrame(self.df.loc[self.df[grid_point_reader['ID_label']] == i].reset_index(drop=True))
@@ -353,10 +353,10 @@ class GridpointReader:
             for pos, disp in zip(vert_pos, vert_disp):
                 # Calculate the final position and append it to the list
                 gp_pos_new.append(list(np.add(np.array(pos), np.array(disp))))
-            self.blocks.append(BlockDraw(vertices=gp_pos_new))
+            self.block_list.append(BlockDraw(vertices=gp_pos_new))
 
     def draw(self):
-        Func.draw_blocks(self.blocks)
+        Func.draw_blocks(self.block_list)
 
 
 def create_block_gps(gps):
@@ -396,7 +396,7 @@ if __name__ == '__main__':
     # a = GeometryReader(filename)
     # sample_bg = BlockGroup(a.get_block_vertices())
     # sample_bg.draw()
-    a = 'C:\\Users\\dgian\\Documents\\Itasca\\3dec700\\My Projects\\Gp_info_DIANA_val2.txt'
+    a = 'C:\\Users\\\\dgian\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test3\\Gp_info.txt'
     sample_gp = GridpointReader(a)
     sample_gp.draw()
 
