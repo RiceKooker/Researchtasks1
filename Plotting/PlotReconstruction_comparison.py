@@ -20,15 +20,15 @@ def three_dec_plot(file_name, label, alpha=1.0, prop=1.0):
 
 
 if __name__ == '__main__':
-    file_name1 = 'C:\\Users\\dgian\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test2\\force_displacement.csv'
-    file_name2 = 'C:\\Users\\dgian\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test3\\force_displacement.csv'
+    file_name1 = 'C:\\Users\\mans3851\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test3\\New folder\\force_displacement.csv'
+    file_name2 = 'C:\\Users\\mans3851\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test6\\force_displacement.csv'
     # file_name3 = 'C:\\Users\\dgian\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Pushover_low_wall\\Pushover_systematic\\Pushover3\\force_displacement.csv'
     # file_name4 = 'C:\\Users\\dgian\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Pushover_low_wall\\Pushover_systematic\\Pushover4\\force_displacement.csv'
 
     df = pd.read_csv('../data/cyclic_test_low.csv', names=['x', 'y'])
     plt.scatter(df['x'].tolist(), df['y'].tolist(), marker='o', s=8, label='Experiment')
-    three_dec_plot(file_name1, 'Large strain - on', alpha=1, prop=0.1)
-    three_dec_plot(file_name2, 'Large strain - off', alpha=0.2, prop=0.1)
+    three_dec_plot(file_name2, 'Linear stiffness degradation', alpha=0.5, prop=0.1)
+    three_dec_plot(file_name1, 'No stiffness degradation', alpha=0.2, prop=0.1)
     # three_dec_plot(file_name3, 'Pushover3')
     # three_dec_plot(file_name4, 'Pushover4')
 
@@ -39,5 +39,5 @@ if __name__ == '__main__':
     plt.ylabel('Shear force / kN')
     plt.title('Force-displacement curve')
     plt.xlim([-12, 12])
-    plt.ylim([-90, 90])
+    plt.ylim([-100, 100])
     plt.show()
