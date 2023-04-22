@@ -162,7 +162,7 @@ class BricksBoundary:
     This class stores information about top and bottom boundary blocks. Some post processing functions are added to extract detailed information.
     """
 
-    def __init__(self, vertices):
+    def __init__(self, vertices, thickness=0.1):
         """
         Initialize the limits in x, y, and z direction. The 2 blocks share the same x,y limits but have different z limits.
         :param vertices:
@@ -172,7 +172,6 @@ class BricksBoundary:
         self.z_lim = [vertices[0][2], vertices[1][2]]
 
         # Define the thickness of the boundary blocks
-        thickness = 0.1
         self.z_bot = [self.z_lim[0] - thickness*Const.brick_dims_UK[2], self.z_lim[0]]
         self.z_top = [self.z_lim[1], self.z_lim[1] + thickness*Const.brick_dims_UK[2]]
 
