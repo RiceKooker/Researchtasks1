@@ -26,5 +26,6 @@ row1.add(row3)
 row1.expand('top', times=4)
 row1.expand('top')
 English_wall = row1
+row1.draw()
 
 
