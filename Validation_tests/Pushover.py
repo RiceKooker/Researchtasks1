@@ -4,7 +4,7 @@ import model_specs as ms
 
 wall = English_wall
 brick_commands = wall.three_DEC_create()
-boundary_bricks = BricksBoundary(vertices=wall.find_vertices())
+boundary_bricks = BricksBoundary(vertices=wall.find_vertices(), thickness=0.8)
 # velocities = get_velocities(ms.displacements, ms.velocity_max, ms.wall_dim)
 # stop_axis_index, stop_axis = stop_detection(ms.displacements)
 
