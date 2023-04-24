@@ -56,7 +56,7 @@ vertical_pressure = -0.6e6
 
 # Cyclic test specs
 disp_lim = 7e-3
-increment = 0.25e-3
+increment = 0.25e-3*3
 cyclic_specs = {
     'load_direction': 'x',
     'disp_amps': utils_val.displacement_amplitude(disp_lim, increment),
@@ -110,3 +110,7 @@ boundary_spec = {
 group_name_top = 'TOP'
 group_name_bot = 'BOT'
 group_name_body = 'None'
+
+if __name__ == '__main__':
+    from utils import print_list
+    print(print_list(cyclic_specs['disp_amps']))

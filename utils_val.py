@@ -9,8 +9,11 @@ def displacement_amplitude(lim, step_size):
     amp_current = 0
     stop_check = 0
     while stop_check < lim:
-        disp_amps.append(amp_current + step_size)
-        disp_amps.append(amp_current + step_size)
+        new_amp = amp_current + step_size
+        if new_amp > lim:
+            new_amp = lim
+        disp_amps.append(new_amp)
+        disp_amps.append(new_amp)
         stop_check = disp_amps[-1]
         amp_current = amp_current + step_size
     return disp_amps
