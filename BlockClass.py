@@ -17,7 +17,7 @@ class Block:
         :return:
         """
         temp = cls([0, 1], [0, 1], [0, 1])
-        temp.vertices = vertices
+        temp.vertices = vertices.copy()
         return temp
 
     @classmethod
@@ -114,19 +114,21 @@ class Block:
 class BlockGroup:
     def __init__(self, blocks):
         if isinstance(blocks, Block):
-            self.block_list = [blocks]
+            self.block_list = [blocks.copy()]
         else:
-            self.block_list = blocks
+            self.block_list = blocks.copy()
 
-    def add(self, other_blocks):
-        if isinstance(other_blocks, BlockGroup):
-            self.block_list += other_blocks.block_list
-        else:
-            self.block_list.append(other_blocks)
+    def add(self, *other_blocks):
+        for other_block in other_blocks:
+            if isinstance(other_block, BlockGroup):
+                self.block_list += other_block.block_list.copy()
+            else:
+                self.block_list.append(other_block.copy())
+        return BlockGroup(self.block_list)
 
     def move(self, dis_vec):
-        for block in self.block_list:
-            block.move(dis_vec)
+        for i, block in enumerate(self.block_list):
+            self.block_list[i].move(dis_vec)
 
     def duplicate(self, side, times=1, disp_vec_in=None):
         if disp_vec_in is None:
