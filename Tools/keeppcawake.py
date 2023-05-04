@@ -6,9 +6,8 @@ def active():
     start = time.time()
     while True:
         try:
-            pyautogui.press('volumedown')
-            time.sleep(100)
             pyautogui.press('volumeup')
+            pyautogui.press('volumedown')
             time.sleep(300)
         except (KeyboardInterrupt, SystemExit):
             end = time.time()
