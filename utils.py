@@ -15,6 +15,15 @@ def print_list(a_list):
     return str_out
 
 
+def print_string_list(str_list):
+    str_out = ''
+    for i, value in enumerate(str_list):
+        str_add = f"'{value}', "
+        if i+1 == len(str_list):
+            str_add = f"'{value}'"
+        str_out += str_add
+    return str_out
+
 def print_location(a_list):
     """This function is for printing lists in 3DEC script. The precision can be specified."""
     str_out = ''

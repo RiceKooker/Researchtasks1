@@ -21,6 +21,7 @@ row2.move([0, 0, brick_dim1[2]])
 rows_repeat = row1.add(row2)
 rows_repeat.expand(side='top', times=16)
 wall = rows_repeat
+wall.draw()
 
 brick_commands = wall.three_DEC_create()
 boundary_bricks = BricksBoundary(vertices=wall.find_vertices(), thickness=0.8)

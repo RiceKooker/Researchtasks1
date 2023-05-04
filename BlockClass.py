@@ -2,12 +2,16 @@ import Classes
 import Func
 from Func import find_axis_and_direction, find_lims_from_points, draw_blocks
 import numpy as np
+from itertools import count
 
 class Block:
+    block_id = count(0)
+
     def __init__(self, x_lim, y_lim, z_lim):
         self.vertices = [[x_lim[0], y_lim[0], z_lim[0]], [x_lim[0], y_lim[0], z_lim[1]], [x_lim[1], y_lim[0], z_lim[1]],
                     [x_lim[1], y_lim[0], z_lim[0]], [x_lim[0], y_lim[1], z_lim[0]], [x_lim[0], y_lim[1], z_lim[1]],
                     [x_lim[1], y_lim[1], z_lim[1]], [x_lim[1], y_lim[1], z_lim[0]]]
+        self.block_id = next(self.block_id)
 
     @classmethod
     def build(cls, vertices):
@@ -46,6 +50,12 @@ class Block:
     def get_com(self):
         dims = self.get_dims()
         return [a+0.5*b for a, b in zip(self.vertices[0], dims)]
+
+    def get_lims(self):
+        x_lim = [self.vertices[0][0], self.vertices[3][0]]
+        y_lim = [self.vertices[0][1], self.vertices[4][1]]
+        z_lim = [self.vertices[0][2], self.vertices[1][2]]
+        return x_lim, y_lim, z_lim
 
     def copy(self):
         """
@@ -89,11 +99,27 @@ class Block:
     def draw(self):
         Func.draw_blocks2([self])
 
+    def create_crack_surfaces(self, axis):
+        """
+        This generates 3DEC commands which can create two blocks representing the original block. An extra surface will be generated.
+        :param axis: one of [0, 1, 2] representing [x, y, z], the extra surface generated will have a normal parallel to the axis specified.
+        :return:
+        """
+        x_lim, y_lim, z_lim = self.get_lims()
+        lims = [x_lim, y_lim, z_lim]
+        lim_modified = lims[axis]
+        lim1 = lims.copy()
+        lim2 = lims.copy()
+        mid_value = sum(lim_modified)/len(lim_modified)
+        lim1[axis] = [lim_modified[0], mid_value]
+        lim2[axis] = [mid_value, lim_modified[1]]
+        return f"block create brick {lim1[0][0]:.10f} {lim1[0][1]:.10f} {lim1[1][0]:.10f} {lim1[1][1]:.10f} {lim1[2][0]:.10f} {lim1[2][1]:.10f} group 'GP{self.block_id}_1' \n" \
+               f"block create brick {lim2[0][0]:.10f} {lim2[0][1]:.10f} {lim2[1][0]:.10f} {lim2[1][1]:.10f} {lim2[2][0]:.10f} {lim2[2][1]:.10f} group 'GP{self.block_id}_2' \n"
+
     def three_DEC_create(self):
-        x_lim = [self.vertices[0][0], self.vertices[3][0]]
-        y_lim = [self.vertices[0][1], self.vertices[4][1]]
-        z_lim = [self.vertices[0][2], self.vertices[1][2]]
-        return f"block create brick {x_lim[0]:.10f} {x_lim[1]:.10f} {y_lim[0]:.10f} {y_lim[1]:.10f} {z_lim[0]:.10f} {z_lim[1]:.10f} \n"
+        x_lim, y_lim, z_lim = self.get_lims()
+        return f"block create brick {x_lim[0]:.10f} {x_lim[1]:.10f} {y_lim[0]:.10f} {y_lim[1]:.10f} {z_lim[0]:.10f} {z_lim[1]:.10f} group 'GP{self.block_id}' \n"
+
 
 
 # class Block(Classes.Block):
@@ -165,6 +191,18 @@ class BlockGroup:
             total_command += block.three_DEC_create()
         return total_command
 
+    def three_DEC_create_crack_surface(self, axis=0):
+        total_command = ''
+        for block in self.block_list:
+            total_command += block.create_crack_surfaces(axis)
+        return total_command
+
+    def get_id_list(self):
+        id_list = []
+        for block in self.block_list:
+            id_list.append(f'GP{block.block_id}')
+        return id_list
+
     def find_vertices(self):
         """
         This function returns the vertices of the wall following the same ordering condition as blocks.
@@ -183,16 +221,9 @@ class BlockGroup:
 
 
 if __name__ == '__main__':
-    dims1 = [1, 1, 1]
-    dims2 = [2*i for i in dims1]
-    dims3 = [3*i for i in dims1]
-    block1 = Block.dim_build(dims=dims1)
-    block2 = block1.duplicate(side='right')
-    block3 = block2.duplicate(side='top', new_dims=dims3)
-    block4 = block3.duplicate(side='back', new_dims=dims2)
-    blockgroup1 = BlockGroup(block1)
-    blockgroup1.expand('back')
-    blockgroup1.draw()
+    a = Block.dim_build([1, 1, 1])
+    b = Block.dim_build([1, 1, 1])
+    print(b.block_id)
 
 
 
