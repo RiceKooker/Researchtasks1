@@ -145,12 +145,13 @@ class BlockGroup:
             self.block_list = blocks.copy()
 
     def add(self, *other_blocks):
+        temp = self.block_list.copy()
         for other_block in other_blocks:
             if isinstance(other_block, BlockGroup):
-                self.block_list += other_block.block_list.copy()
+                temp += other_block.block_list.copy()
             else:
-                self.block_list.append(other_block.copy())
-        return BlockGroup(self.block_list)
+                temp.append(other_block.copy())
+        return BlockGroup(temp)
 
     def move(self, dis_vec):
         for i, block in enumerate(self.block_list):
