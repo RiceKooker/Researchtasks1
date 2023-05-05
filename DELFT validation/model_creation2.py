@@ -19,11 +19,17 @@ row2 = row2_temp1.add(row2_temp2, row2_temp3)
 row2.move([0, 0, brick_dim1[2]])
 
 rows_repeat = row1.add(row2)
-rows_repeat.expand(side='top', times=16)
+rows_repeat.expand(side='top', times=15)
+print(rows_repeat.find_vertices())
+row1.move([0, 0, brick_dim1[2]*32])
+print(rows_repeat.find_vertices())
+rows_repeat = rows_repeat.add(row1)
 wall = rows_repeat
 wall.draw()
 
 brick_commands = wall.three_DEC_create_crack_surface()
+
+print(wall.find_vertices())
 
 boundary_bricks = BricksBoundary(vertices=wall.find_vertices(), thickness=0.8)
 
