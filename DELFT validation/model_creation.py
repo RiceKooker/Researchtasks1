@@ -1,6 +1,6 @@
 import BlockClass as bc
 from const import brick_dims
-from utils import BricksBoundary
+from utils import BricksBoundary, print_string_list
 
 brick_dim1 = brick_dims.copy()
 brick_dim2 = brick_dims.copy()
@@ -23,7 +23,8 @@ rows_repeat.expand(side='top', times=16)
 wall = rows_repeat
 wall.draw()
 
-brick_commands = wall.three_DEC_create()
+brick_commands = wall.three_DEC_create_crack_surface()
 boundary_bricks = BricksBoundary(vertices=wall.find_vertices(), thickness=0.8)
 
 print(brick_commands + boundary_bricks.commands)
+print(print_string_list(wall.get_id_list()))
