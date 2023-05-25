@@ -1,6 +1,7 @@
 import BlockClass as bc
 from const import face_vertex_index as f_indices
 from Classes import GridpointReader
+import os
 
 
 def transform_vertex_order(vertices):
@@ -39,6 +40,27 @@ def save_obj(block_list, filename):
         f.write(object_command)
 
 
+def save_obj_sep(block_list, filename):
+    os.mkdir(filename)
+    for block_index, block in enumerate(block_list):
+        filename_each = f'{filename}\\Block_{block_index}.obj'
+        with open(filename_each, 'w') as f:
+            object_command = ''
+            vertices = transform_vertex_order(block.vertices)
+            for vertex in vertices:
+                f.write(f'v {vertex[0]} {vertex[1]} {vertex[2]}\n')
+            f.write('\n')
+            object_command += f'g Block{1}\n'
+            for i_face in f_indices:
+                v_i_start = 0
+                i_face = [a+v_i_start for a in i_face]
+                object_command += f'f {i_face[0]} {i_face[1]} {i_face[2]} {i_face[3]}\n'
+            object_command += '\n'
+            f.write(object_command)
+
+
+
+
 if __name__ == '__main__':
     block1 = bc.Block.dim_build([5, 2, 10])
     block1.move([3, 0, 0])
@@ -47,5 +69,6 @@ if __name__ == '__main__':
     bg1 = bc.BlockGroup([block1, block2])
     a = 'C:\\Users\\\\dgian\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test3\\Gp_info.txt'
     sample_gp = GridpointReader(a)
-    #bg1.draw()
-    save_obj(sample_gp.block_list, 'sample3.obj')
+    # bg1.draw()
+    # save_obj(sample_gp.block_list, 'sample3.obj')
+    save_obj_sep(sample_gp.block_list, 'sample3')
