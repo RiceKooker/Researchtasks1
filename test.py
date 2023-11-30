@@ -61,7 +61,7 @@ if __name__ == '__main__':
     print(df2.head())
     sample_gp = GridpointReader("Position2_test.txt")
 
-    sp = [[1,2,3],[3,4,5]]
+    sp = [[1,2,3],[3,4,5]] 
     a,b = find_vert_from_gps(sp)
 
 

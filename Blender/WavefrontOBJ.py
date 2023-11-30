@@ -67,7 +67,7 @@ if __name__ == '__main__':
     block2 = block1.duplicate(vec=[10, 0, 0])
     block3 = block2.duplicate(vec=[0, 0, 5])
     bg1 = bc.BlockGroup([block1, block2])
-    a = 'C:\\Users\\\\dgian\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test3\\Gp_info.txt'
+    a = 'C:\\Users\\mans3851\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test3\\Gp_info.txt'
     sample_gp = GridpointReader(a)
     # bg1.draw()
     # save_obj(sample_gp.block_list, 'sample3.obj')
