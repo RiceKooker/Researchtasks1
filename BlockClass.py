@@ -1,6 +1,6 @@
 import Classes
 import Func
-from Func import find_axis_and_direction, find_lims_from_points, draw_blocks
+from Func import find_axis_and_direction, find_lims_from_points, draw_blocks, rotate_3d_point
 import numpy as np
 from itertools import count
 
@@ -72,6 +72,12 @@ class Block:
         """
         for i, vertex in enumerate(self.vertices):
             self.vertices[i] = [a+b for a, b in zip(vertex, vec)]
+
+    def rot(self, angles, center='centroid'):
+        if center == 'centroid':
+            center = self.get_com()
+        for i, vertex in enumerate(self.vertices):
+            self.vertices[i] = rotate_3d_point(vertex, angles, origin=center)
 
     def duplicate(self, side=None, new_dims=None, vec=None):
         """

@@ -6,6 +6,32 @@ from Const import side_dict, grid_point_reader, vertex_index_dict
 import pandas as pd
 
 
+def get_rotation_matrix_3d(x_angle, y_angle, z_angle):
+    """Get 3D rotation matrix for given angles."""
+    Rx = np.array([[1, 0, 0],
+                   [0, np.cos(np.radians(x_angle)), -np.sin(np.radians(x_angle))],
+                   [0, np.sin(np.radians(x_angle)), np.cos(np.radians(x_angle))]])
+
+    Ry = np.array([[np.cos(np.radians(y_angle)), 0, np.sin(np.radians(y_angle))],
+                   [0, 1, 0],
+                   [-np.sin(np.radians(y_angle)), 0, np.cos(np.radians(y_angle))]])
+
+    Rz = np.array([[np.cos(np.radians(z_angle)), -np.sin(np.radians(z_angle)), 0],
+                   [np.sin(np.radians(z_angle)), np.cos(np.radians(z_angle)), 0],
+                   [0, 0, 1]])
+
+    return np.dot(Rz, np.dot(Ry, Rx))
+
+
+def rotate_3d_point(point, angles, origin=(0, 0, 0)):
+    """Rotate a 3D point around a given origin.
+    Angles are 3D array and the units are degrees."""
+    rotation_matrix = get_rotation_matrix_3d(*angles)
+    translated_point = np.array(point) - np.array(origin)
+    rotated_point = np.dot(rotation_matrix, translated_point)
+    return np.array([i for i in rotated_point + np.array(origin)])
+
+
 def check_vertex(pos, lims):
     """
     This function checks if a grid point is one of the vertices of a block.
