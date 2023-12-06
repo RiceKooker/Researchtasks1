@@ -1,5 +1,5 @@
 import BlockClass as bc
-from const import face_vertex_index as f_indices
+from Blender.const import face_vertex_index as f_indices
 from Classes import GridpointReader
 import os
 
