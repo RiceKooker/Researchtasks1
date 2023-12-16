@@ -12,6 +12,7 @@ class Block:
                     [x_lim[1], y_lim[0], z_lim[0]], [x_lim[0], y_lim[1], z_lim[0]], [x_lim[0], y_lim[1], z_lim[1]],
                     [x_lim[1], y_lim[1], z_lim[1]], [x_lim[1], y_lim[1], z_lim[0]]]
         self.block_id = next(self.block_id)
+        self.dims = self.get_dims()
 
     @classmethod
     def build(cls, vertices):
@@ -22,6 +23,7 @@ class Block:
         """
         temp = cls([0, 1], [0, 1], [0, 1])
         temp.vertices = vertices.copy()
+        temp.dims = temp.get_dims()
         return temp
 
     @classmethod
