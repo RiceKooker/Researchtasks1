@@ -5,3 +5,4 @@ if __name__ == '__main__':
     block1 = bc.Block.dim_build([1, 1, 1])
     print(block1.vertices)
     block1.rot(angles=[0, 45, 0])
+    block1.draw()
