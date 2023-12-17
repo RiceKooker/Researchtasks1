@@ -202,7 +202,9 @@ class RBlock(Block):
         relative_pos = np.dot(self.find_rot().T, relative_pos)
         return relative_pos
 
-    def generate_surface_points(self, num_points_per_dim):
+    def generate_surface_points(self, num_points_per_dim, face_i=None):
+        if face_i is not None:
+            return generate_points_on_rectangle(get_face_verts(face_i, self.vertices), num_points_per_dim)
         surface_points = generate_points_on_rectangle(get_face_verts(0, self.vertices), num_points_per_dim)
         for i in range(1, 6):
             surface_points_ = generate_points_on_rectangle(get_face_verts(i, self.vertices), num_points_per_dim)
