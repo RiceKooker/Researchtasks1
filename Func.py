@@ -269,6 +269,50 @@ def draw_blocks2(block_list, wall_vert=None):
     plt.show()
 
 
+def draw_blocks3(block_list, highlight_point=None, wall_vert=None, show=True):
+    """
+    This function draws all the block objects given in the block_list.
+    :param block_list:
+    :param wall_vert: optional. This is to highlight the corners of the wall.
+    :param highlight_point: optional. This highlight any point of interest, given its coordinates.
+    :return:
+    """
+    fig = plt.figure()
+    ax = Axes3D(fig, auto_add_to_figure=False)
+    fig.add_axes(ax)
+    if wall_vert is not None:
+        # This is to highlight the vertices of the wall.
+        ax.scatter3D(wall_vert[:, 0], wall_vert[:, 1], wall_vert[:, 2], marker='^', c='#010812', s=50)
+    if highlight_point is not None:
+        ax.scatter3D(highlight_point[0], highlight_point[1], highlight_point[2], marker='X', c='#010812', s=100)
+        ax.text(highlight_point[0], highlight_point[1], highlight_point[2], f'Traced point', color='black', fontsize=8, ha='right', va='bottom')
+    for block in block_list:
+        vertices = transform_vertices(block.vertices)
+        x = vertices[:, 0]
+        y = vertices[:, 1]
+        z = vertices[:, 2]
+        # vertices = [list(zip(x, y, z))]
+        ax.scatter3D(vertices[:, 0], vertices[:, 1], vertices[:, 2])
+        verts = [[vertices[0], vertices[1], vertices[2], vertices[3]],
+                 [vertices[4], vertices[5], vertices[6], vertices[7]],
+                 [vertices[0], vertices[1], vertices[5], vertices[4]],
+                 [vertices[2], vertices[3], vertices[7], vertices[6]],
+                 [vertices[1], vertices[2], vertices[6], vertices[5]],
+                 [vertices[4], vertices[7], vertices[3], vertices[0]]]
+        ax.add_collection3d(Poly3DCollection(verts, facecolors='cyan', linewidths=1, edgecolors='r', alpha=.20))
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.set_box_aspect([ub - lb for lb, ub in (getattr(ax, f'get_{a}lim')() for a in 'xyz')])
+    # ax.get_xaxis().set_ticks([])
+    # ax.get_yaxis().set_ticks([])
+    # ax.get_zaxis().set_ticks([])
+    if show is True:
+        plt.show()
+    else:
+        return fig
+
+
 def find_axis_and_direction(side):
     side_info = side_dict[side]
     axis = side_info[0]
