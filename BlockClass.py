@@ -50,8 +50,7 @@ class Block:
         return [x_lim[1]-x_lim[0], y_lim[1]-y_lim[0], z_lim[1]-z_lim[0]]
 
     def get_com(self):
-        dims = self.get_dims()
-        return [a+0.5*b for a, b in zip(self.vertices[0], dims)]
+        return np.mean(self.vertices, axis=0)
 
     def get_lims(self):
         x_lim = [self.vertices[0][0], self.vertices[3][0]]
