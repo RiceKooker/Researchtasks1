@@ -6,6 +6,7 @@ from model_specs import brick_dim_num
 from Const import output_geometry_file_separator as gfs
 import pandas as pd
 import Func as fc
+from DisplacementMapping import RBlockClass as Rb
 
 
 class BlockDraw:
@@ -353,9 +354,10 @@ class GridpointReader:
             for pos, disp in zip(vert_pos, vert_disp):
                 # Calculate the final position and append it to the list
                 gp_pos_new.append(list(np.add(np.array(pos), np.array(disp))))
-            self.block_list.append(BlockDraw(vertices=gp_pos_new))
+            self.block_list.append(Rb.RBlock.build(vertices=gp_pos_new))
+            # self.block_list.append(BlockDraw(vertices=gp_pos_new))
 
-    def draw(self):
+    def draw(self): 
         Func.draw_blocks(self.block_list)
 
 

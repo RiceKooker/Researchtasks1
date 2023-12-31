@@ -1,8 +1,8 @@
-import Classes
 import Func
 from Func import find_axis_and_direction, find_lims_from_points, draw_blocks, rotate_3d_point
 import numpy as np
 from itertools import count
+
 
 class Block:
     block_id = count(0)

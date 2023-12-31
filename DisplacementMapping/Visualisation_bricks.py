@@ -6,6 +6,29 @@ from Const import brick_dims_UK
 from Blender.WavefrontOBJ import save_obj_sep
 import pandas as pd
 import copy
+import DisplacementMapping.disp_utils
+
+def read_scanned_points(file_dir, sample_interval):
+    df = pd.read_csv(file_dir, sep=';')
+    points = []
+    ids = []
+    n = 0
+    for i, row in df.iterrows():
+        x = float(row['X'])
+        try:
+            y = float(row['Y'])
+        except ValueError:
+            continue
+        z = float(row['Z'])
+        block_id = int(row['categoryID'])
+        n += 1
+        if n >= sample_interval:
+            points.append([x, y, z])
+            ids.append(block_id)
+            n -= sample_interval
+    points = np.array(points)
+    ids = np.array(ids)
+    return points, ids
 
 
 if __name__ == '__main__':
@@ -33,35 +56,40 @@ if __name__ == '__main__':
     deformed_blocks[3].move([0.2*brick_dims_UK[0], 0, 0])
     deformed_blocks[3].rot([0, -10, -15])
     # Func.draw_blocks5(deformed_blocks)
-    df = pd.read_csv('Blender/scanned_points_frames_1_to_1.csv', sep=';')
-    points = []
-    ids = []
-    n = 0
-    sample_interval = 20
-    for i, row in df.iterrows():
-        x = float(row['X'])
-        try:
-            y = float(row['Y'])
-        except ValueError:
-            continue
-        z = float(row['Z'])
-        block_id = int(row['categoryID'])
-        if block_id == 0 or block_id == 2:
-            continue
-        n += 1
-        if n >= sample_interval:
-            points.append([x, y, z])
-            ids.append(block_id)
-            n -= sample_interval
-    points = np.array(points)
-    ids = np.array(ids)
 
-    temp = []
-    for point, b_id in zip(points, ids):
-        point_rel = deformed_blocks[b_id].find_relative_pos(point)
-        point_abs = block_list[b_id].find_absolute_pos(point_rel)
-        temp.append(point_abs)
-    points2 = np.array(temp)
+    # df = pd.read_csv('Blender/scanned_points_frames_1_to_1.csv', sep=';')
+    # points = []
+    # ids = []
+    # n = 0
+    # sample_interval = 20
+    # for i, row in df.iterrows():
+    #     x = float(row['X'])
+    #     try:
+    #         y = float(row['Y'])
+    #     except ValueError:
+    #         continue
+    #     z = float(row['Z'])
+    #     block_id = int(row['categoryID'])
+    #     if block_id == 0 or block_id == 2:
+    #         continue
+    #     n += 1
+    #     if n >= sample_interval:
+    #         points.append([x, y, z])
+    #         ids.append(block_id)
+    #         n -= sample_interval
+    # points = np.array(points)
+    # ids = np.array(ids)
+
+    points, ids = DisplacementMapping.disp_utils.read_scanned_points('Blender/scanned_points_frames_1_to_1.csv', 20)
+
+
+    # temp = []
+    # for point, b_id in zip(points, ids):
+    #     point_rel = deformed_blocks[b_id].find_relative_pos(point)
+    #     point_abs = block_list[b_id].find_absolute_pos(point_rel)
+    #     temp.append(point_abs)
+    # points2 = np.array(temp)
+    points2 = DisplacementMapping.disp_utils.find_co_points(block_list, deformed_blocks, points, ids)
 
     points_all = [points, points2]
     Func.draw_blocks5(block_list+deformed_blocks, highlight_points=points_all, show=True)

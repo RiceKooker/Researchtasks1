@@ -73,8 +73,8 @@ if __name__ == '__main__':
     # ---------------------------------------------------------------------------------------------------------------------------------
 
     # Generate obj files from geometry files generated from 3DEC.
-    geo_file_dir = 'C:\\Users\\mans3851\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\DELFT\\Long wall\\Cyclic\\2\\Gp_info.txt'
-    saved_file_dir= 'TUD_COMP-4-2-deformed'
+    geo_file_dir = 'C:\\Users\\mans3851\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\DELFT\\Long wall\\Cyclic\\2\\Undeformed\\Gp_info.txt'
+    saved_file_dir= 'TUD_COMP-4-2-undeformed-test'
     grid_point_info = GridpointReader(geo_file_dir)
     save_obj_sep(grid_point_info.block_list, saved_file_dir)
     # ---------------------------------------------------------------------------------------------------------------------------------
