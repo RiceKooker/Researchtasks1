@@ -46,6 +46,8 @@ if __name__ == '__main__':
             continue
         z = float(row['Z'])
         block_id = int(row['categoryID'])
+        if block_id == 0 or block_id == 2:
+            continue
         n += 1
         if n >= sample_interval:
             points.append([x, y, z])
