@@ -62,13 +62,19 @@ def save_obj_sep(block_list, filename):
 
 
 if __name__ == '__main__':
-    block1 = bc.Block.dim_build([5, 2, 10])
-    block1.move([3, 0, 0])
-    block2 = block1.duplicate(vec=[10, 0, 0])
-    block3 = block2.duplicate(vec=[0, 0, 5])
-    bg1 = bc.BlockGroup([block1, block2])
-    a = 'C:\\Users\\mans3851\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test3\\Gp_info.txt'
-    sample_gp = GridpointReader(a)
+    # Example: Generate obj files by manually generating blocks.
+    # block1 = bc.Block.dim_build([5, 2, 10])
+    # block1.move([3, 0, 0])
+    # block2 = block1.duplicate(vec=[10, 0, 0])
+    # block3 = block2.duplicate(vec=[0, 0, 5])
+    # bg1 = bc.BlockGroup([block1, block2])
     # bg1.draw()
-    # save_obj(sample_gp.block_list, 'sample3.obj')
-    save_obj_sep(sample_gp.block_list, 'sample3')
+    # save_obj(sample_gp.block_list, 'sample3.obj')   # Some modifications needed here.
+    # ---------------------------------------------------------------------------------------------------------------------------------
+
+    # Generate obj files from geometry files generated from 3DEC.
+    geo_file_dir = 'C:\\Users\\mans3851\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\DELFT\\Long wall\\Cyclic\\2\\Gp_info.txt'
+    saved_file_dir= 'TUD_COMP-4-2-deformed'
+    grid_point_info = GridpointReader(geo_file_dir)
+    save_obj_sep(grid_point_info.block_list, saved_file_dir)
+    # ---------------------------------------------------------------------------------------------------------------------------------
