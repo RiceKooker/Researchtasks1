@@ -1,5 +1,6 @@
 """
 This script is to visualise the clustering of scanned points using convex hull.
+This script also uses the idea of hausdorff distance to find cracks.
 """
 import numpy as np
 import open3d as o3d
