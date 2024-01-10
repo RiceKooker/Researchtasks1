@@ -209,7 +209,7 @@ def draw_blocks(block_list, wall_vert=None):
         # This is to highlight the vertices of the wall.
         ax.scatter3D(wall_vert[:, 0], wall_vert[:, 1], wall_vert[:, 2], marker='^', c='#010812', s=50)
     for block in block_list:
-        vertices = transform_vertices(block.Vertices)
+        vertices = transform_vertices(block.vertices)
         x = vertices[:, 0]
         y = vertices[:, 1]
         z = vertices[:, 2]
@@ -378,7 +378,7 @@ def draw_blocks5(block_list, highlight_points=None, wall_vert=None, show=True, h
             x = np.array([point1[0], point2[0]])
             y = np.array([point1[1], point2[1]])
             z = np.array([point1[2], point2[2]])
-            ax.plot(xs=x, ys=y, zs=z, color='r', ls='--', alpha=0.7)
+            ax.plot(xs=x, ys=y, zs=z, color='r', ls='-', alpha=1)
 
     for block in block_list:
         vertices = transform_vertices(block.vertices)
@@ -397,7 +397,7 @@ def draw_blocks5(block_list, highlight_points=None, wall_vert=None, show=True, h
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
-    ax.set_box_aspect([(ub - lb) for lb, ub in (getattr(ax, f'get_{a}lim')() for a in 'xyz')])
+    ax.set_box_aspect([10*(ub - lb) for lb, ub in (getattr(ax, f'get_{a}lim')() for a in 'xyz')])
     # ax.get_xaxis().set_ticks([])
     # ax.get_yaxis().set_ticks([])
     # ax.get_zaxis().set_ticks([])
