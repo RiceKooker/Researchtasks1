@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-def read_scanned_points(file_dir, sample_interval=1):
+def read_scanned_points(file_dir, sample_interval=1, sep=';',  noise=False):
     """
     This function reads the csv that contains the scanned point information.
     It returns the coordinates of the scanned points - 'points'.
@@ -10,17 +10,20 @@ def read_scanned_points(file_dir, sample_interval=1):
     :param file_dir: directory of the csv file.
     :param sample_interval: sampling interval.
     """
-    df = pd.read_csv(file_dir, sep=';')
+    suffix = ''
+    if noise is True:
+        suffix = '_noise'
+    df = pd.read_csv(file_dir, sep=sep)
     points = []
     ids = []
     n = 0
     for i, row in df.iterrows():
-        x = float(row['X'])
+        x = float(row['X'+suffix])
         try:
-            y = float(row['Y'])
+            y = float(row['Y'+suffix])
         except ValueError:
             continue
-        z = float(row['Z'])
+        z = float(row['Z'+suffix])
         block_id = int(row['categoryID'])
         n += 1
         if n >= sample_interval:
@@ -47,3 +50,9 @@ def find_co_points(blocks, blocks_, points, ids):
         temp.append(point_abs)
     return np.array(temp)
 
+
+def points_distance(points1, points2):
+    temp = []
+    for point1, point2 in zip(points1, points2):
+        temp.append(np.linalg.norm(point1-point2))
+    return np.array(temp)
