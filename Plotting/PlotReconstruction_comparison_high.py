@@ -14,8 +14,8 @@ def three_dec_plot(file_name, label):
 
 
 if __name__ == '__main__':
-    file_name1 = 'C:\\Users\\dgian\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Pushover_high\\Systematic\\Pushover1\\force_displacement.csv'
-    file_name2 = 'C:\\Users\\dgian\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Pushover_high\\Systematic\\Pushover2\\force_displacement.csv'
+    file_name1 = 'C:\\Users\\mans3851\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Pushover_high\\Systematic\\Pushover1\\force_displacement.csv'
+    file_name2 = 'C:\\Users\\mans3851\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Pushover_high\\Systematic\\Pushover2\\force_displacement.csv'
 
     df = pd.read_csv('../data/cyclic_test_high.csv', names=['x', 'y'])
     plt.scatter(df['x'].tolist(), df['y'].tolist(), marker='o', s=8, label='Experiment')

@@ -2,7 +2,7 @@ import cv2
 import os
 import moviepy.editor as moviepy
 
-image_folder = 'C:\\Users\\mans3851\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\Cyclic_low_wall\\Systematic\\test3'
+image_folder = 'C:\\Users\\mans3851\\OneDrive - Nexus365\\phd\\Year 1\\3DEC test\\Validation_tests\\Validation\\DELFT\\Long wall\\New stage\\Cyclic\\1'
 video_name = 'video'
 video_name_temp = os.path.join(image_folder, video_name + '.' + 'avi')
 video_name = os.path.join(image_folder, video_name + '.' + 'mp4')

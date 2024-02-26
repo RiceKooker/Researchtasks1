@@ -1,7 +1,7 @@
 import pyautogui
 import time
 
-
+# 192.168.1.102 research laptop ip.
 def active():
     start = time.time()
     while True:

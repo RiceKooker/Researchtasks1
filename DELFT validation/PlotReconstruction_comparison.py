@@ -54,18 +54,19 @@ def plot_files(file_dir, prefix='force_displacement_', alpha=0.5, prop=0.05, s=5
 if __name__ == '__main__':
     read_plot_data(stocky_wall_backbone, label='Backbone', alpha=0.9, s=15)
     read_plot_data(stocky_wall_full_curve, label='Full curve', alpha=0.9, s=15)
-    file_name_friction_solved = 'C:\\Users\\mans3851\\OneDrive - Nexus365\\phd\\Year 1\\3DEC ' \
+    file_name1 = 'C:\\Users\\mans3851\\OneDrive - Nexus365\\phd\\Year 1\\3DEC ' \
                                 'test\\Validation_tests\\Validation\\DELFT\\Long ' \
-                                'wall\\Pushover\\1\\force_displacement.csv'
+                                'wall\\New stage\\Cyclic\\1\\force_displacement.csv'
 
-    three_dec_plot(file_name_friction_solved, 'Simulation', alpha=0.8, prop=0.05)
+    three_dec_plot(file_name1, 'Simulation', alpha=0.8, prop=0.05)
+    # three_dec_plot(file_name2, 'Simulation-0.5c', alpha=0.8, prop=0.05)
 
     plt.grid(axis='x')
     plt.grid(axis='y')
     plt.legend(markerscale=4)
     plt.xlabel('Lateral displacement / mm')
     plt.ylabel('Shear force / kN')
-    plt.title('TUD-COMP_4-Completed loading scheme')
+    plt.title('TUD-COMP_4-S7')
     # plt.xlim([-12, 12])
     # plt.ylim([-100, 100])
     plt.show()
