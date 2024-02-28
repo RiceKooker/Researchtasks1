@@ -11,5 +11,5 @@ pcd_fpfh1 = calc_fpfh(pcd=pcd1, radius=search_radius)
 
 
 if __name__ == '__main__':
-    draw_hist_single_point(pcd_fpfh0.data[:, 0], title='Example of FPFH')
+    draw_hist_single_point(pcd_fpfh0[0], title='Example of FPFH')
     
