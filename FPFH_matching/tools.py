@@ -38,6 +38,7 @@ def local_feature_matching(pcd0, pcd1, fpsh0, fpsh1, radius):
 
     return correspondance0, correspondance1
 
+
 def draw_hist_single_point(features, title):
     fig, ax = plt.subplots()
     ax.bar(np.array(list(range(len(features)))), features)
@@ -46,10 +47,13 @@ def draw_hist_single_point(features, title):
 
 
 def calc_fpfh(pcd, radius, n_max=100):
+    """
+    This function evaluates the normalized fast point feature histogram of the o3d point cloud.
+    """
     pcd.estimate_normals(
         o3d.geometry.KDTreeSearchParamHybrid(radius=radius/2.5, max_nn=30))  # Empirical numbers from https://www.open3d.org/docs/release/tutorial/pipelines/global_registration.html
     pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(pcd,o3d.geometry.KDTreeSearchParamHybrid(radius=radius, max_nn=n_max))
-    return pcd_fpfh
+    return np.array([i/np.sum(i) for i in pcd_fpfh.data.T])
 
 
 def convert_o3d_pcd(pcd):
@@ -58,7 +62,18 @@ def convert_o3d_pcd(pcd):
     return pcd_
 
 
-def read_xyz(filename, delimiter=',', noise=False, voxel_size=None, openthreeD=True, offset=(0, 0, 0)):
+def read_xyz(filename, delimiter=',', noise=False, voxel_size=None, openthreeD=True, boundary=False, offset=(0, 0, 0)):
+    """
+    This function reads the point cloud scanned from masonry stored in csv file format.
+    @param filename: absolute directory of the csv file.
+    @param delimiter: delimiter used in the csv file.
+    @param noise: T or F, determine if the noise data or the noiseless data is read.
+    @param voxel_size: for down-sampling
+    @param openthreeD: if T, outputs open3D point cloud class otherwise outputs numpy array
+    @param boundary: if T, all points belonging to the last 2 blocks are ignored.
+    @param offset: displace all the points with this offset
+    @return: point cloud data, a numpy array containing the block id each point belongs to
+    """
     suffix = ''
     if noise is True:
         suffix = '_noise'
@@ -68,10 +83,11 @@ def read_xyz(filename, delimiter=',', noise=False, voxel_size=None, openthreeD=T
     df = pd.read_csv(filename, delimiter=delimiter)
 
     # Exclude the points scanned from the boundary blocks.
-    block_id = np.array(df['categoryID'].tolist())
-    boundary_block_id = np.max(block_id)
-    df = df.loc[df['categoryID'] != boundary_block_id]
-    df = df.loc[df['categoryID'] != boundary_block_id-1]
+    if not boundary:
+        block_id = np.array(df['categoryID'].tolist())
+        boundary_block_id = np.max(block_id)
+        df = df.loc[df['categoryID'] != boundary_block_id]
+        df = df.loc[df['categoryID'] != boundary_block_id-1]
     
     for axis_name in coord_list:
         points.append(np.array(df[axis_name+suffix].tolist()))
