@@ -3,6 +3,18 @@ import open3d as o3d
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.spatial import KDTree
+import json
+
+
+def save_list(file_name, list_data):
+    with open(file_name, 'w') as f:
+        json.dump(list_data, f, indent=2)
+
+
+def load_list(file_name):
+    with open(file_name, 'r') as f:
+        loaded_file = json.load(f)
+    return loaded_file
 
 
 def compare_arrays(arr1, arr2):
