@@ -4,6 +4,57 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.spatial import KDTree
 import json
+from tqdm import tqdm
+from sklearn.cluster import KMeans
+
+
+def min_point_spacing(points_array, n_samples=10, n_neighbours=8):
+    """
+    This function estimates the average point spacing among a group of points by taking samples and measuring the
+    distance between the samples and their neighbouring points.
+    @param points_array: point cloud array - nxm where n is the number of points and m is the dimension of each point.
+    @param n_samples: samples to take from the point cloud.
+    @param n_neighbours: number of neighbours used to evaluate the average spacing.
+    @return: scalar - average point spacing.
+    """
+    samples = sample_points(points_array, n_samples)
+    tree = KDTree(points_array)
+    spacing = []
+    for sample in samples:
+        distance_, idx = tree.query(sample, k=n_neighbours+1)
+        neighbours = points_array[idx[1:]]
+        spacing.append(find_ave_spacing(sample, neighbours))
+    return sum(spacing)/len(spacing)
+
+
+
+def sample_points(points, n_samples):
+    # Convert points to numpy array
+    points_array = np.array(points)
+
+    # Initialize KMeans with n_samples clusters
+    kmeans = KMeans(n_clusters=n_samples, random_state=0)
+
+    # Fit KMeans to the data
+    kmeans.fit(points_array)
+
+    # Get the centroids of the clusters
+    centroids = kmeans.cluster_centers_
+
+    return centroids.tolist()
+
+
+def find_ave_spacing(point_s, point_t):
+    """
+    This function evaluates the average euclidean distance between a group of target points and a source point.
+    @param point_s: source point - shape of (m,) where m is the dimension of the data point
+    @param point_t: group of target points - shape of (n,m)
+    @return: a scalar indicating the average spacing
+    """
+    point_s = np.asarray(point_s)
+    point_t = np.asarray(point_t)
+    diff = point_t - point_s
+    return sum([np.linalg.norm(i) for i in diff])/len(diff)
 
 
 def save_list(file_name, list_data):
@@ -29,8 +80,17 @@ def compare_arrays(arr1, arr2):
 
 def local_feature_matching(pcd0, pcd1, fpsh0, fpsh1, radius):
     """
-    All data should have the number of data points to be the first dimension.
+    This function finds the correspondence between the target point cloud and the source point cloud by comparing their
+    feature vectors.
+    @param pcd0: source point cloud to be matched - dim: nx3, where n is the number of points
+    @param pcd1: target point cloud - dim: nx3
+    @param fpsh0: features of the source point cloud - dim: nxm, where m is the dimension of each feature vector
+    @param fpsh1: features of the target point cloud - dim: nxm
+    @param radius: local search radius - in meter
+    @return: a list of indices of points in the source point cloud. i.e output[10] = 35 means that the 11th point in the
+    target point cloud pcd1 corresponds to the 36th point in the source point cloud pcd0.
     """
+    print('Neighbour searching in progress.')
     correspondance0, correspondance1 = [], []
 
     # For each point in pcd0, find all the points in pcd1 that are within radius r of the point in pcd0.
@@ -38,17 +98,20 @@ def local_feature_matching(pcd0, pcd1, fpsh0, fpsh1, radius):
     tree0 = KDTree(pcd0)
     tree1 = KDTree(pcd1)
     local_neighbour_idx = tree0.query_ball_tree(other=tree1, r=radius)
+    print('Neighbours found.')
 
-    for i, neighbour_indices in enumerate(local_neighbour_idx):
+    # Perform feature matching within the neighbouring groupof each point in pcd0.
+    print('Local matching search is in progress...')
+    for i, neighbour_indices in tqdm(enumerate(local_neighbour_idx)):
         query_fpsh = fpsh0[i]
         fpsh1_neighbours = fpsh1[neighbour_indices]
         fpsh1_tree = KDTree(fpsh1_neighbours)
         distance_, closest_idx = fpsh1_tree.query(query_fpsh)
         closest_idx_global1 = neighbour_indices[closest_idx]
-        correspondance0.append(i)
         correspondance1.append(closest_idx_global1)
+    print('Local searching done')
 
-    return correspondance0, correspondance1
+    return correspondance1
 
 
 def draw_hist_single_point(features, title):
@@ -74,7 +137,7 @@ def convert_o3d_pcd(pcd):
     return pcd_
 
 
-def read_xyz(filename, delimiter=',', noise=False, voxel_size=None, openthreeD=True, boundary=False, offset=(0, 0, 0)):
+def read_xyz(filename, delimiter=',', noise=False, voxel_size=None, openthreeD=True, boundary=True, offset=(0, 0, 0)):
     """
     This function reads the point cloud scanned from masonry stored in csv file format.
     @param filename: absolute directory of the csv file.
@@ -116,4 +179,26 @@ def read_xyz(filename, delimiter=',', noise=False, voxel_size=None, openthreeD=T
 
 
 if __name__ == '__main__':
-    pass
+    def generate_evenly_spaced_points_with_noise(l, n, noise_std):
+        # Generate evenly spaced points in each dimension
+        x_points = np.linspace(0, l * (n - 1), n)
+        y_points = np.linspace(0, l * (n - 1), n)
+        z_points = np.linspace(0, l * (n - 1), n)
+
+        # Create meshgrid from points
+        xx, yy, zz = np.meshgrid(x_points, y_points, z_points)
+
+        # Stack the meshgrid coordinates to form the points
+        points = np.vstack([xx.ravel(), yy.ravel(), zz.ravel()]).T
+
+        # Generate zero-mean Gaussian noise
+        noise = np.random.normal(loc=0, scale=noise_std, size=points.shape)
+
+        # Add noise to the points
+        points_with_noise = points + noise
+
+        return points_with_noise
+
+    points1 = generate_evenly_spaced_points_with_noise(2, 10, 0.001)
+    print(min_point_spacing(points1, 10, 8))
+
