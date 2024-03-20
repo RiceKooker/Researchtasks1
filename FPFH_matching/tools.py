@@ -6,6 +6,171 @@ from scipy.spatial import KDTree
 import json
 from tqdm import tqdm
 from sklearn.cluster import KMeans
+from scipy.stats import norm
+from DisplacementMapping.RBlockClass import procrustes_analysis
+import random
+from FPFH_matching.const import include_dict
+import pickle
+
+
+def find_nan_indices(lst):
+    nan_indices = [i for i, x in enumerate(lst) if isinstance(x, float) and x != x]
+    return nan_indices
+
+
+def rigid_model_filter(pcd0, pcd1, correspondence_list, iteration, threshold, sample_n=3):
+    correspondence_list = np.array(correspondence_list)
+    pcd0 = np.array(pcd0)
+    pcd1 = np.array(pcd1)
+
+    # Get the corresponding points
+    pcd0 = pcd0[correspondence_list[:, 0]]
+    pcd1 = pcd1[correspondence_list[:, 1]]
+    displacement = np.array([(p1-p0) for p0, p1 in zip(pcd0, pcd1)])
+
+    best_inliers = []
+    best_inliers_count = 0
+    best_rot, best_trans = None, None
+    # RANSAC
+    for i in range(iteration):
+        # Draw samples
+        sample_idx = random.sample(list(range(len(pcd0))), sample_n)
+        samples0, samples1 = pcd0[sample_idx], pcd1[sample_idx]  # The samples should dimension of sample_n x 3
+
+        # Find the rigid model parameters and predictions (points after)
+        predictions_, rot, trans = find_rigid_params_3d_fake(points_before=samples0, points_after=samples1, axis=1)
+        predictions = np.array([transform_points_fake_3d(p0, rot, trans) for p0 in pcd0])
+
+        # Evaluate the predicted displacement
+        pred_disp = np.array([(p_p-p0) for p0, p_p in zip(pcd0, predictions)])
+
+        # Perform inliers check
+        current_inliers = []
+        for j, disps in enumerate(zip(displacement, pred_disp)):
+            disp, p_disp = disps
+            if np.linalg.norm(disp - p_disp) < threshold:
+                current_inliers.append(j)
+
+        if len(current_inliers) > best_inliers_count:
+            best_inliers = current_inliers
+            best_inliers_count = len(current_inliers)
+            best_rot = rot
+            best_trans = trans
+
+    return best_inliers, best_rot, best_trans
+
+
+def find_rigid_params_3d_fake(points_before, points_after, axis=1):
+    points_before = np.array(points_before)
+    points_after = np.array(points_after)
+    prediction_2d, rotation_matrix, trans_vec = find_rigid_params_2d(points_before[:, include_dict[axis]], points_after[:, include_dict[axis]])
+    points_before[:, include_dict[axis]] = prediction_2d
+    return points_before, rotation_matrix, trans_vec
+
+
+def mutual_correspondence(list_a, list_b):
+    """
+    This function keeps the mutual correspondence between 2 correspondence index lists.
+    list_a[2] = 5 means that the 3rd element in the array a corresponds to the 6th element in array b.
+    @param list_a: correspondence index list bonded to array a
+    @param list_b: correspondence index list bonded to array b
+    @return: mutual correspondence list - mutual[2] = [2, 4] means that the 3rd element in array a
+    corresponds to the 5th element in array b.
+    """
+    mutual = []
+    for i, c_a in enumerate(list_a):
+        if list_b[c_a] == i:
+            mutual.append([i, c_a])
+    return np.array(mutual)
+
+
+def transform_points(points, rotation_matrix, translation_vector):
+    """
+    Transform points using rotation matrix and translation vector.
+
+    Parameters:
+        points (numpy.ndarray): Array of shape (N, 2) containing 2D points.
+        rotation_matrix (numpy.ndarray): 2x2 rotation matrix.
+        translation_vector (numpy.ndarray): 1x2 translation vector.
+
+    Returns:
+        transformed_points (numpy.ndarray): Array of shape (N, 2) containing transformed points.
+    """
+    return np.dot(points, rotation_matrix.T) + translation_vector
+
+
+def transform_points_fake_3d(points, rotation, translation, axis=1):
+    points = np.array(points)
+    points[include_dict[axis]] = transform_points(points=points[include_dict[axis]],
+                                                  rotation_matrix=rotation, translation_vector=translation)
+    return points
+
+
+def find_rigid_params_2d(points_before, points_after):
+    points_before = np.array(points_before)
+    points_after = np.array(points_after)
+    # If ignore y axis
+    rotation_matrix, trans_matrix = procrustes_analysis(points_after, points_before)
+    predicted_points = transform_points(points_before, rotation_matrix, trans_matrix)
+
+    return predicted_points, rotation_matrix, trans_matrix
+
+
+def fit_gaussian(your_data, xlabel, ylabel):
+    mean, std_dev = norm.fit(your_data)
+    plt.hist(your_data, bins=100, density=True, alpha=0.6, color='g')
+    xmin, xmax = plt.xlim()
+    x = np.linspace(xmin, xmax, 100)
+    p = norm.pdf(x, mean, std_dev)
+    plt.plot(x, p, 'k', linewidth=2)
+    plt.title("Fit results: Mean = %.2f,  Standard Deviation = %.2f" % (mean, std_dev))
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.grid(True)
+    # plt.show()
+    return mean, std_dev
+
+
+def feature_quality_filter(fpfh, alpha):
+    # Evaluate the mean FPFH
+    mean_fpfh = np.mean(fpfh, axis=0)
+
+    # Evaluate the KL divergence of all points
+    kl_div = np.asarray([calc_kl_div(fpfh_i, mean_fpfh) for fpfh_i in fpfh])
+
+    # Transform into log scale
+    kl_div = np.log(kl_div)
+
+    # Fit a Gaussian and find the mean and standard deviation
+    miu, std = fit_gaussian(kl_div, xlabel='KL divergence value', ylabel='Probability')
+
+    # Pick the points with more distinguished features
+    return [i for i, value in enumerate(kl_div) if value < miu-std*alpha or value > miu+std*alpha]
+
+
+def calc_kl_div(point_fpfh, mean_fpfh, threshold=0.0001):
+    out = 0
+    for i, bin_values in enumerate(zip(point_fpfh, mean_fpfh)):
+        p, m = bin_values
+        # Ignore zero values
+        if p < threshold or m < threshold:
+            continue
+        out += (p-m)*np.log(p/m)
+    return out
+
+
+def get_block_points(pcd, ids, block_id):
+    """
+    This function extract all the points belonging to the same block.
+    @param pcd: overall point cloud
+    @param ids: list of block id - ids[i] tells which block does the ith point belongs to
+    @param block_id: block id of the block interested
+    @return: points array - nx3
+    """
+    pcd = np.array(pcd)
+    ids = np.array(ids)
+    point_idx = np.where(ids == block_id)
+    return pcd[point_idx]
 
 
 def min_point_spacing(points_array, n_samples=10, n_neighbours=8):
@@ -25,7 +190,6 @@ def min_point_spacing(points_array, n_samples=10, n_neighbours=8):
         neighbours = points_array[idx[1:]]
         spacing.append(find_ave_spacing(sample, neighbours))
     return sum(spacing)/len(spacing)
-
 
 
 def sample_points(points, n_samples):
@@ -57,15 +221,26 @@ def find_ave_spacing(point_s, point_t):
     return sum([np.linalg.norm(i) for i in diff])/len(diff)
 
 
-def save_list(file_name, list_data):
+def save_list_json(file_name, list_data):
     with open(file_name, 'w') as f:
         json.dump(list_data, f, indent=2)
 
 
-def load_list(file_name):
+def load_list_json(file_name):
     with open(file_name, 'r') as f:
         loaded_file = json.load(f)
     return loaded_file
+
+
+def save_list(file_name, list_data):
+    with open(file_name, "wb") as fp:  # Pickling
+        pickle.dump(list_data, fp)
+
+
+def load_list(file_name):
+    with open(file_name, "rb") as fp:  # Pickling
+        out = pickle.load(fp)
+    return out
 
 
 def compare_arrays(arr1, arr2):
@@ -114,6 +289,24 @@ def local_feature_matching(pcd0, pcd1, fpsh0, fpsh1, radius):
     return correspondance1
 
 
+def feature_vector_match(f0, f1):
+    """
+    This function finds the correspondence between two sets of feature vectors.
+    It gives the corresponding point index in the source feature vector.
+    correspondence[5] = 10 means that the 6th data
+    point in f1 corresponds to the 11th point in f0.
+    @param f0: source feature vectors - n x m where n is the number of data points and m is the number of features.
+    @param f1: target feature vector
+    @return: correspondence
+    """
+    f_tree = KDTree(f0)
+    correspondence = []
+    for each_f in f1:
+        distance_, closest_idx = f_tree.query(each_f)
+        correspondence.append(closest_idx)
+    return correspondence
+
+
 def draw_hist_single_point(features, title):
     fig, ax = plt.subplots()
     ax.bar(np.array(list(range(len(features)))), features)
@@ -128,7 +321,17 @@ def calc_fpfh(pcd, radius, n_max=100):
     pcd.estimate_normals(
         o3d.geometry.KDTreeSearchParamHybrid(radius=radius/2.5, max_nn=30))  # Empirical numbers from https://www.open3d.org/docs/release/tutorial/pipelines/global_registration.html
     pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(pcd,o3d.geometry.KDTreeSearchParamHybrid(radius=radius, max_nn=n_max))
-    return np.array([i/np.sum(i) for i in pcd_fpfh.data.T])
+    out = []
+    exclude = []
+    for i, feature in enumerate(pcd_fpfh.data.T):
+        with np.errstate(invalid='raise'):
+            try:
+                out.append(feature/sum(feature))  # this gets caught and handled as an exception
+            except FloatingPointError:
+                exclude.append(i)
+                continue
+
+    return np.array(out), np.array(exclude)
 
 
 def convert_o3d_pcd(pcd):
@@ -179,26 +382,6 @@ def read_xyz(filename, delimiter=',', noise=False, voxel_size=None, openthreeD=T
 
 
 if __name__ == '__main__':
-    def generate_evenly_spaced_points_with_noise(l, n, noise_std):
-        # Generate evenly spaced points in each dimension
-        x_points = np.linspace(0, l * (n - 1), n)
-        y_points = np.linspace(0, l * (n - 1), n)
-        z_points = np.linspace(0, l * (n - 1), n)
-
-        # Create meshgrid from points
-        xx, yy, zz = np.meshgrid(x_points, y_points, z_points)
-
-        # Stack the meshgrid coordinates to form the points
-        points = np.vstack([xx.ravel(), yy.ravel(), zz.ravel()]).T
-
-        # Generate zero-mean Gaussian noise
-        noise = np.random.normal(loc=0, scale=noise_std, size=points.shape)
-
-        # Add noise to the points
-        points_with_noise = points + noise
-
-        return points_with_noise
-
-    points1 = generate_evenly_spaced_points_with_noise(2, 10, 0.001)
-    print(min_point_spacing(points1, 10, 8))
-
+    a = [1, 2, 3]
+    b = ['a', 'b', 'c']
+    print(random.sample(zip(a, b), 2))
