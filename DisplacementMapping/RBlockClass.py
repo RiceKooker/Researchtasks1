@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 
 
 def procrustes_analysis(X, Y):
+    X = np.array(X)
+    Y = np.array(Y)
     # Center the points
     centroid_X = np.mean(X, axis=0)
     centroid_Y = np.mean(Y, axis=0)
@@ -19,8 +21,12 @@ def procrustes_analysis(X, Y):
     U, _, Vt = np.linalg.svd(covariance_matrix)
 
     # Ensure a proper rotation matrix (fix potential reflections)
-    S = np.eye(3)
-    S[2, 2] = np.linalg.det(np.dot(Vt.T, U.T))
+    if len(X[0]) == 2:  # 2D case
+        S = np.eye(2)
+        S[1, 1] = np.linalg.det(np.dot(Vt.T, U.T))
+    else:  # 3D case
+        S = np.eye(3)
+        S[2, 2] = np.linalg.det(np.dot(Vt.T, U.T))
 
     # Compute the rotation matrix
     rotation_matrix = np.dot(U, np.dot(S, Vt))
